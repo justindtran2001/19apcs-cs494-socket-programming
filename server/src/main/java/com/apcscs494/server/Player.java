@@ -1,6 +1,6 @@
-package com.apcscs494;
+package com.apcscs494.server;
 
-import com.apcscs494.constants.GameState;
+import com.apcscs494.server.constants.GameState;
 
 import java.io.*;
 import java.net.Socket;
@@ -25,6 +25,7 @@ class Player implements Runnable {
     private BufferedReader reader = null;
     private String username = null;
     private Long id = null;
+    private Integer score = 0;
 
     public String getUsername() {
         return this.username;
@@ -108,6 +109,17 @@ class Player implements Runnable {
 
     }
 
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public void increaseScore(Integer amount) {
+        this.score += amount;
+    }
 }
 
 // We tried using serialized object but wasn't able to solve the bug

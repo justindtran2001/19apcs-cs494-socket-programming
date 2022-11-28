@@ -26,6 +26,11 @@
             <version>${javafx.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.apcs-cs494</groupId>
             <artifactId>server</artifactId>
             <version>1.0-SNAPSHOT</version>

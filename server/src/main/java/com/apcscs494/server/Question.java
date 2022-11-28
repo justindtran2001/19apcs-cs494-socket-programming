@@ -1,4 +1,4 @@
-package com.apcscs494;
+package com.apcscs494.server;
 
 import java.util.ArrayList;
 
@@ -29,6 +29,10 @@ public class Question {
 
         this.guessedCharList.add(guessChar);
         return true;
+    }
+
+    public boolean guessTheKeyword(String guessKeyword) {
+        return this.keyword.equals(guessKeyword);
     }
 
     @Override

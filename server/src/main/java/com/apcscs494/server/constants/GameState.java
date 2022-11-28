@@ -1,4 +1,4 @@
-package com.apcscs494.constants;
+package com.apcscs494.server.constants;
 
 public enum GameState {
     INITIAL,

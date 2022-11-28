@@ -1,4 +1,6 @@
-package com.apcscs494;
+package com.apcscs494.client;
+
+import com.apcscs494.server.Server;
 
 import java.net.Socket;
 import java.util.Scanner;
@@ -7,7 +9,7 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-class Client {
+public class Client {
     private Socket socket = null;
     private BufferedWriter writer = null;
     private BufferedReader reader = null;
@@ -56,17 +58,14 @@ class Client {
 
     public void listenMessage() {
         Socket theSocket = this.socket;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("...Listening...");
-                while (theSocket.isConnected()) {
-                    try {
-                        System.out.println(reader.readLine());
-                    } catch (Exception e) {
-                        System.out.println("Client error at listen: " + e.getMessage());
-                        exit();
-                    }
+        new Thread(() -> {
+            System.out.println("...Listening...");
+            while (theSocket.isConnected()) {
+                try {
+                    System.out.println(reader.readLine());
+                } catch (Exception e) {
+                    System.out.println("Client error at listen: " + e.getMessage());
+                    exit();
                 }
             }
         }).start();

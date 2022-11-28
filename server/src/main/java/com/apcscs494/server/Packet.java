@@ -1,4 +1,4 @@
-package com.apcscs494;
+package com.apcscs494.server;
 
 import java.io.Serializable;
 

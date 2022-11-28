@@ -1,11 +1,11 @@
-package com.apcscs494;
+package com.apcscs494.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
 import java.util.concurrent.locks.ReentrantLock;
 
-class Server {
+public class Server {
     public static final int PORT = 8386;
     public static final int REGISTER = 0;
     public static final int ANSWER = 1;
