@@ -86,7 +86,7 @@ class Client {
 
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("localhost", 8386);
+            Socket socket = new Socket("localhost", Server.PORT);
             Client client = new Client(socket);
             client.listenMessage();
             client.sendMessage();
