@@ -10,7 +10,7 @@ class Server {
     public static final int REGISTER = 0;
     public static final int ANSWER = 1;
 
-    private static ReentrantLock mutex = new ReentrantLock();
+    private static final ReentrantLock mutex = new ReentrantLock();
 
     public static void main(String[] args) throws IOException {
         Scanner sc = new Scanner(System.in);

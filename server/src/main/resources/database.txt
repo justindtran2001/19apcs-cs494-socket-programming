@@ -1,0 +1,7 @@
+3
+java
+a widely used object-oriented programming language and software platform that runs on billions of devices, including notebook computers, mobile devices, gaming consoles, medical devices and many others
+backend
+parts of a computer application or a programs code that allow it to operate and that cannot be accessed by a user
+spring
+an open-source framework for building enterprise Java applications

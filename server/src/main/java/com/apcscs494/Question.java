@@ -3,17 +3,39 @@ package com.apcscs494;
 import java.util.ArrayList;
 
 public class Question {
-    String keyword;
-    String hint;
-
+    final String keyword;
+    final String hint;
     ArrayList<Character> guessedCharList;
 
+    public Question(String keyword, String hint) {
+        this.keyword = keyword;
+        this.hint = hint;
+        guessedCharList = new ArrayList<>();
+    }
+
     public String getCurrentKeyword() {
-        String res = new String(keyword);
-        for (Character c : guessedCharList) {
-            res.replace(c, '*');
+        String res = this.keyword;
+        for (int i = 0; i < this.keyword.length(); ++i) {
+            if (res.charAt(i) != '*' && !guessedCharList.contains(res.charAt(i))) {
+                res = res.replace(res.charAt(i), '*');
+            }
         }
         return res;
     }
 
+    public boolean guessACharacter(Character guessChar) {
+        if (!this.keyword.contains(guessChar.toString()))
+            return false;
+
+        this.guessedCharList.add(guessChar);
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Question{" +
+                "keyword='" + keyword + '\'' +
+                ", hint='" + hint + '\'' +
+                '}';
+    }
 }

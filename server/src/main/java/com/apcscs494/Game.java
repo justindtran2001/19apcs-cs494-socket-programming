@@ -2,6 +2,9 @@ package com.apcscs494;
 
 import com.apcscs494.constants.GameState;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -18,8 +21,6 @@ import java.util.Objects;
 */
 
 class Game {
-
-
     public Integer total_turn;
 
     public GameState state;
@@ -28,11 +29,11 @@ class Game {
     public HashMap<Player, Integer> playerList;
 
     // map <id, player>
-    public HashMap<Long, Player> playerIDList;
+    public HashMap<Long, Player> playerIDList = new HashMap<>();
+
 
     // map <keyword, hint>
-    public HashMap<String, String> keywordList;
-    public ArrayList<Question> questionList;
+    public ArrayList<Question> questionList = new ArrayList<>();
 
     // determine the turn of player id x
     public Long currentPlayerId;
@@ -40,11 +41,29 @@ class Game {
     // current question
     public Question currentQuestion;
 
- 
-
-    public Game() {
+    public Game() throws Exception {
         // read questions from database here
-        
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream is = classLoader.getResourceAsStream("database.txt");
+            if (is == null) throw new Exception("inputStream is null");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+            int len = Integer.parseInt(reader.readLine());
+            System.out.println("\nReading " + len + " pairs of keyword and hint:");
+            for (int i = 0; i < len; ++i) {
+                String keyword = reader.readLine();
+                String hint = reader.readLine();
+                Question question = new Question(keyword, hint);
+                questionList.add(question);
+                System.out.println("Keyword: " + keyword);
+                System.out.println("Hint: " + hint);
+            }
+            System.out.println();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error when loading database.txt", e);
+        }
     }
 
     public String getCurrentKeyWordState() {
@@ -76,9 +95,9 @@ class Game {
     }
 
     public boolean forceEndGame() {
-        
+
         for (HashMap.Entry<Player, Integer> player :
-             playerList.entrySet()) {
+                playerList.entrySet()) {
             if (player.getValue() == 5) {
                 return false;
             }
@@ -102,9 +121,8 @@ class Game {
 
         if (currentQuestion.keyword.contains(answer[0])) {
             // add 1 point to current player
-        } 
+        }
 
-        
 
     }
 
