@@ -5,8 +5,7 @@ import com.apcscs494.server.constants.GameState;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 /* message structure 
 
@@ -20,7 +19,7 @@ import java.util.HashMap;
 */
 
 class Game {
-    public Integer total_turn;
+    public Integer total_turn = 0;
 
     public GameState state;
 
@@ -28,7 +27,8 @@ class Game {
     public HashMap<Player, Integer> playerNumOfTurns;
 
     // map <id, player>
-    public HashMap<Long, Player> playerIDList = new HashMap<>();
+    public LinkedHashMap<Long, Integer> playerIDScoreList = new LinkedHashMap<>();
+    public Long nextAvailableID = 0L;
 
     // map <keyword, hint>
     public ArrayList<Question> questionList = new ArrayList<>();
@@ -69,8 +69,11 @@ class Game {
         return currentQuestion.getCurrentKeyword();
     }
 
-    public boolean register(Long id) {
-        return playerIDList.containsKey(id);
+    public Long register() {
+        Long newID = this.nextAvailableID;
+        this.nextAvailableID++;
+
+        return newID;
     }
 
     public GameState getState() {
@@ -114,13 +117,13 @@ class Game {
         if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
             this.end(currentPlayerId);
             // add 5 points to current player
-            playerIDList.get(currentPlayerId).increaseScore(5);
+            playerIDScoreList.put(currentPlayerId, playerIDScoreList.get(currentPlayerId) + 5);
             return;
         }
 
         if (currentQuestion.guessACharacter(answer[0].charAt(0))) {
             // add 1 point to current player
-            playerIDList.get(currentPlayerId).increaseScore(1);
+            playerIDScoreList.put(currentPlayerId, playerIDScoreList.get(currentPlayerId) + 1);
         }
     }
 

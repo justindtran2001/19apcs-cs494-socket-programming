@@ -5,7 +5,6 @@ import com.apcscs494.server.constants.GameState;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Random;
 
 // A handler for a player/client
 class Player implements Runnable {
@@ -25,7 +24,6 @@ class Player implements Runnable {
     private BufferedReader reader = null;
     private String username = null;
     private Long id = null;
-    private Integer score = 0;
 
     public String getUsername() {
         return this.username;
@@ -41,10 +39,7 @@ class Player implements Runnable {
 
             players.add(this);
 
-            do  {
-                this.id = new Random().nextLong();
-            }
-            while (!game.register(this.id));
+            this.id = game.register();
 
             if (players.size() == maxPlayer) {
                 game.start();
@@ -91,7 +86,7 @@ class Player implements Runnable {
         while (this.socket.isConnected()) {
             try {
                 message = reader.readLine();
-                // this.broadcast(message, Server.REGISTER);
+                this.broadcast(message, Server.REGISTER);
 
                 if (game.getState() != GameState.END) {
                     // broadcast game hint and current keyword so far
@@ -107,18 +102,6 @@ class Player implements Runnable {
             }
         }
 
-    }
-
-    public Integer getScore() {
-        return score;
-    }
-
-    public void setScore(Integer score) {
-        this.score = score;
-    }
-
-    public void increaseScore(Integer amount) {
-        this.score += amount;
     }
 }
 
