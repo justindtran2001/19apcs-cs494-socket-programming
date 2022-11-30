@@ -1,97 +1,75 @@
 package com.apcscs494.client;
 
-import com.apcscs494.server.Server;
+import javafx.scene.control.Label;
 
+import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 
 public class Client {
-    private Socket socket = null;
-    private BufferedWriter writer = null;
-    private BufferedReader reader = null;
-    private String username = null;
-    private Scanner sc = null;
+    private static Client instance;
+    private Socket socket;
+    private BufferedReader reader;
+    private BufferedWriter writer;
 
-    public Client(Socket socket) {
+    private Client() {}
+
+    public static synchronized Client getInstance() throws IOException {
+        if (instance == null) {
+            instance = new Client(new Socket("localhost", 8386));
+        }
+        return instance;
+    }
+
+    private Client(Socket socket) throws IOException {
         try {
             this.socket = socket;
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.sc = new Scanner(System.in);
-            this.register();
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println("Client error at init: " + e.getMessage());
             e.printStackTrace();
+            exit(socket, reader, writer);
         }
     }
 
-    private void register() {
-
-        System.out.print("Enter your username: ");
-        this.username = sc.nextLine();
-
+    private void exit(Socket socket, BufferedReader reader, BufferedWriter writer) {
         try {
-            writer.write(this.username);
-            writer.newLine();
-            writer.flush();
-        } catch (Exception e) {
-            System.out.println("Client error at register: " + e.getMessage());
+            if (writer != null)
+                writer.close();
+            if (reader != null)
+                reader.close();
+            if (socket != null)
+                socket.close();
+        } catch (IOException e) {
+            System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public void sendMessage() {
-        try {
-            while (socket.isConnected()) {
-                writer.write(this.username + ": " + this.sc.nextLine());
-                writer.newLine();
-                writer.flush();
-            }
-        } catch (Exception e) {
-            System.out.println("Client error at sendMessage: " + e.getMessage());
-        }
-    }
-
-    public void listenMessage() {
-        Socket theSocket = this.socket;
+    public void receiveResponseFromServer(Label responseLabel) {
+        Socket socket = this.socket;
         new Thread(() -> {
             System.out.println("...Listening...");
-            while (theSocket.isConnected()) {
+            while (socket.isConnected()) {
                 try {
-                    System.out.println(reader.readLine());
+                    String receivedResponse = reader.readLine();
+                    ClientAppController.setResponse(receivedResponse, responseLabel);
                 } catch (Exception e) {
                     System.out.println("Client error at listen: " + e.getMessage());
-                    exit();
+                    exit(socket, reader, writer);
                 }
             }
         }).start();
     }
 
-    private void exit() {
+    public void sendToServer(String message) {
         try {
-            this.sc.close();
-            this.writer.close();
-            this.reader.close();
-            this.socket.close();
-        } catch (Exception e) {
-            System.out.println("Handler exception at exit: " + e.getMessage());
-        }
-    }
-
-
-    public static void main(String[] args) {
-        try {
-            Socket socket = new Socket("localhost", Server.PORT);
-            Client client = new Client(socket);
-            client.listenMessage();
-            client.sendMessage();
-        } catch (Exception e) {
+            writer.write(message);
+            writer.newLine();
+            writer.flush();
+        } catch (IOException e) {
+            System.out.println("Client error at sendMessage: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
 }
