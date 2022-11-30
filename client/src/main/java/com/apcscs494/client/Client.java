@@ -11,13 +11,17 @@ public class Client {
     private BufferedReader reader;
     private BufferedWriter writer;
 
-    private Client() {}
-
     public static synchronized Client getInstance() throws IOException {
-        if (instance == null) {
-            instance = new Client(new Socket("localhost", 8386));
+        try {
+            if (instance == null) {
+                instance = new Client(new Socket("localhost", 8386));
+            }
+            return instance;
+        } catch (IOException e) {
+            System.out.println("Error when opening a socket");
+            e.printStackTrace();
+            throw new IOException("Error when opening a socket");
         }
-        return instance;
     }
 
     private Client(Socket socket) throws IOException {
