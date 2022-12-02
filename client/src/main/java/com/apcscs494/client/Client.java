@@ -12,6 +12,9 @@ public class Client {
     private BufferedReader reader;
     private BufferedWriter writer;
 
+    // Response format: "message,responseType"
+    // responseType in Response.java
+
     public static synchronized Client getInstance() throws IOException {
         try {
             if (instance == null) {

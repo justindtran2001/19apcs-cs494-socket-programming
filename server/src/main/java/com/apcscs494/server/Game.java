@@ -1,50 +1,43 @@
 package com.apcscs494.server;
 
-import com.apcscs494.server.constants.GameState;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
 
 /* message structure 
-
 // CHARACTER,KEYWORD
-
 // example1: "P,PYTHON"
 // example2: "P,"
 // example3: ",PYTHON"
 // example4: ","
-
 */
 
 class Game {
+    public static enum GAME_RESPONSE {
+        CONTINUE,
+        NEXTPLAYER,
+        END,
+    };
     public Integer total_turn = 0;
 
-    public GameState state;
+    // public GameState state;
 
-    // map <player_id, number of turn played>
-    public HashMap<Player, Integer> playerNumOfTurns;
-
-    // map <id, player>
-    public LinkedHashMap<Long, Integer> playerIDScoreList = new LinkedHashMap<>();
+    public GamePlayerList playerList = new GamePlayerList();
     public Long nextAvailableID = 0L;
 
-    // map <keyword, hint>
     public ArrayList<Question> questionList = new ArrayList<>();
-
-    // determine the turn of player id x
-    public Long currentPlayerId;
-
-    // current question
     public Question currentQuestion;
+
+    public Long winnerId = -1L;
 
     public Game() throws Exception {
         // read questions from database here
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             InputStream is = classLoader.getResourceAsStream("database.txt");
-            if (is == null) throw new Exception("inputStream is null");
+            if (is == null)
+                throw new Exception("inputStream is null");
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
             int len = Integer.parseInt(reader.readLine());
@@ -57,6 +50,9 @@ class Game {
                 System.out.println("Keyword: " + keyword);
                 System.out.println("Hint: " + hint);
             }
+
+            currentQuestion = this.getNewQuestion();
+
             System.out.println();
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,67 +60,80 @@ class Game {
         }
     }
 
+    private Question getNewQuestion() {
+        Question q = questionList.get((int) Math.random() * questionList.size());
+
+        if (q.used) return getNewQuestion();
+
+        return q;
+    }
+
     public String getCurrentKeyWordState() {
-        // "*a*b*b"
         return currentQuestion.getCurrentKeyword();
     }
 
-    public Long register() {
-        Long newID = this.nextAvailableID;
-        this.nextAvailableID++;
-
+    public Long register(String username) {
+        Long newID = nextAvailableID;
+        playerList.Add(newID, username);
+        nextAvailableID++;
         return newID;
     }
 
-    public GameState getState() {
-        return this.state;
-    }
+    // public GameState getState() {
+    // return this.state;
+    // }
 
     public void restart() {
-        this.state = GameState.RUNNING;
-
-        // reset point to 0
         // reset everything
+        nextAvailableID = 0L;
+        winnerId = -1L;
+        playerList = new GamePlayerList();
+        currentQuestion = this.getNewQuestion();
     }
 
-    public void start() {
-        this.state = GameState.RUNNING;
-    }
+    // public void start() {
+    //     // state = GameState.RUNNING;
+    // }
 
-    public void end(Long winnerId) {
-        this.state = GameState.END;
+    public ArrayList<GamePlayerData> getResults() {
+        ArrayList<GamePlayerData> results = playerList.ToList();
+        this.restart();
+        if (winnerId == -1)
+            return null;
+        return results;
     }
 
     public boolean forceEndGame() {
-
-        for (HashMap.Entry<Player, Integer> player :
-                playerNumOfTurns.entrySet()) {
-            if (player.getValue() == 5) {
-                return false;
-            }
-        }
-        return true;
+        return playerList.HasForceEndCondition();
     }
 
-    public void process(String message) {
-        this.total_turn += 1;
+    public GAME_RESPONSE process(String message) {
+        total_turn += 1;
         String[] answer = message.split(",");
+        GamePlayerData playerData = playerList.GetCurrent();
 
         if (this.forceEndGame()) {
-            this.end((long) -1);
+            return GAME_RESPONSE.END;
         }
 
         if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
-            this.end(currentPlayerId);
-            // add 5 points to current player
-            playerIDScoreList.put(currentPlayerId, playerIDScoreList.get(currentPlayerId) + 5);
-            return;
+            playerData.AddPoint(5);
+            playerData.SetKeyWordWinner();
+            winnerId = playerData.id;
+            return GAME_RESPONSE.END;
         }
 
         if (currentQuestion.guessACharacter(answer[0].charAt(0))) {
-            // add 1 point to current player
-            playerIDScoreList.put(currentPlayerId, playerIDScoreList.get(currentPlayerId) + 1);
+            playerData.AddPoint(1);
+            return GAME_RESPONSE.CONTINUE;
+        } else {
+            playerData.AddTurn();
+            playerList.MoveNext();
+            return GAME_RESPONSE.NEXTPLAYER;
         }
     }
 
+    public Long GetNextPlayerId() {
+        return playerList.GetCurrent().id;
+    }
 }

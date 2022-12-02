@@ -6,6 +6,7 @@ public class Question {
     final String keyword;
     final String hint;
     ArrayList<Character> guessedCharList;
+    boolean used = false;
 
     public Question(String keyword, String hint) {
         this.keyword = keyword;
