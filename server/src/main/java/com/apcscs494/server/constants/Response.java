@@ -7,4 +7,5 @@ public class Response {
     public static String YOUR_TURN = "YOUR_TURN";
     public static String END_GAME = "END_GAME";
     public static String OUT_GAME = "OUT_GAME";
+    public static String CURRENT_KEYWORD = "CURRENT_KEYWORD";
 }

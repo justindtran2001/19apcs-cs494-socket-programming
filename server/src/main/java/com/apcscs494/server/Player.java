@@ -116,6 +116,7 @@ class Player implements Runnable {
 
         if (code == Game.GAME_RESPONSE.CONTINUE) {
             // continue guessing
+            broadcastAll(game.getCurrentKeyWordState(), Response.CURRENT_KEYWORD);
             broadcastTo(id, "", Response.YOUR_TURN);
         } else if (code == Game.GAME_RESPONSE.NEXTPLAYER) {
             // wrong answer - lost turn;
@@ -131,7 +132,6 @@ class Player implements Runnable {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-
             } finally {
                 RestartGameHandler();
             }

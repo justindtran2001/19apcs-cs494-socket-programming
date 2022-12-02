@@ -89,6 +89,7 @@ class Game {
 
     public void restart() {
         // reset everything
+        total_turn = 0;
         state = GameState.RUNNING;
         winnerId = -1L;
         currentQuestion = this.getNewQuestion();
