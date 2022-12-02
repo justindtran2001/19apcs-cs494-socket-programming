@@ -11,18 +11,14 @@ class Server {
     public static final int PORT = 8386;
     public static final int REGISTER = 0;
     public static final int ANSWER = 1;
+    public static final int MAX_PLAYER = 10;
+    public static final int MIN_PLAYER = 2;
 
     private static ReentrantLock mutex = new ReentrantLock();
 
     public static void main(String[] args) throws IOException {
-        Scanner sc = new Scanner(System.in);
-        int n = 0;
-        while (n <= 0) {
-            System.out.print("Enter number of players: ");
-            n = sc.nextInt();
-        }
 
-        ServerSocket serverSocket = new ServerSocket(PORT, n);
+        ServerSocket serverSocket = new ServerSocket(PORT, MAX_PLAYER);
         new Thread(new Player(serverSocket.accept())).start();
         new Thread(new Runnable() {
             @Override
@@ -30,9 +26,9 @@ class Server {
                 Socket socket;
                 try {
                     socket = new Socket("localhost", PORT);
-                    ClientAdmin client = new ClientAdmin(socket);
-                    client.listenMessage();
-                    client.sendMessage();
+                    ClientAdmin admin = new ClientAdmin(socket);
+                    admin.listenMessage();
+                    admin.sendMessage();
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

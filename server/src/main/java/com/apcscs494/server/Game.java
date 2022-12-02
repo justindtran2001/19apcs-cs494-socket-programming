@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import com.apcscs494.server.constants.GameState;
+
 /* message structure 
 // CHARACTER,KEYWORD
 // example1: "P,PYTHON"
@@ -19,9 +21,10 @@ class Game {
         NEXTPLAYER,
         END,
     };
+
     public Integer total_turn = 0;
 
-    // public GameState state;
+    public GameState state;
 
     public GamePlayerList playerList = new GamePlayerList();
     public Long nextAvailableID = 0L;
@@ -63,7 +66,8 @@ class Game {
     private Question getNewQuestion() {
         Question q = questionList.get((int) Math.random() * questionList.size());
 
-        if (q.used) return getNewQuestion();
+        if (q.used)
+            return getNewQuestion();
 
         return q;
     }
@@ -79,20 +83,24 @@ class Game {
         return newID;
     }
 
-    // public GameState getState() {
-    // return this.state;
-    // }
+    public GameState getState() {
+        return state;
+    }
 
     public void restart() {
         // reset everything
-        nextAvailableID = 0L;
+        state = GameState.RUNNING;
         winnerId = -1L;
-        playerList = new GamePlayerList();
         currentQuestion = this.getNewQuestion();
+        playerList.Reset();
+    }
+
+    public void endByAdmin() {
+        state = GameState.FORCE_END;
     }
 
     // public void start() {
-    //     // state = GameState.RUNNING;
+    // // state = GameState.RUNNING;
     // }
 
     public ArrayList<GamePlayerData> getResults() {
@@ -133,7 +141,7 @@ class Game {
         }
     }
 
-    public Long GetNextPlayerId() {
+    public Long getNextPlayerId() {
         return playerList.GetCurrent().id;
     }
 }

@@ -1,6 +1,5 @@
 package com.apcscs494.clientadmin;
 
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -10,10 +9,12 @@ import java.util.Scanner;
 
 public class ClientAdmin {
     public static final String ADMIN_PHRASE = "admin-thisisadmin";
+    public static final String CAN_START = "CAN_START";
+    public static final String CAN_NOT_START = "CAN_NOT_START";
     private Socket socket = null;
     private BufferedWriter writer = null;
     private BufferedReader reader = null;
-    private String username = null;
+    private String username = ADMIN_PHRASE;
     private Scanner sc = null;
 
     public ClientAdmin(Socket socket) {
@@ -43,7 +44,7 @@ public class ClientAdmin {
     public void sendMessage() {
         try {
             while (socket.isConnected()) {
-                writer.write(this.username + ": " + this.sc.nextLine());
+                writer.write(ADMIN_PHRASE + "-" + this.sc.nextLine());
                 writer.newLine();
                 writer.flush();
             }
@@ -77,7 +78,6 @@ public class ClientAdmin {
             System.out.println("Handler exception at exit: " + e.getMessage());
         }
     }
-
 
     public static void main(String[] args) {
         try {

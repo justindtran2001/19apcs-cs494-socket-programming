@@ -24,6 +24,18 @@ public class GamePlayerList {
     }
   }
 
+  public void Reset() {
+    GamePlayerData cur = head;
+    if (head != null) {
+      do {
+        cur.isKeyWordWinner = false;
+        cur.point = 0;
+        cur.turn = 0;
+        cur = cur.next;
+      } while (cur != head);
+    }
+  }
+
   public GamePlayerData GetNext() {
     GamePlayerData data = current.next;
     current = current.next;

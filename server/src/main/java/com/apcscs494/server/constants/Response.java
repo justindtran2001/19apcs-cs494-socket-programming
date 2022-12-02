@@ -6,4 +6,5 @@ public class Response {
     public static String LOST_TURN = "LOST_TURN";
     public static String YOUR_TURN = "YOUR_TURN";
     public static String END_GAME = "END_GAME";
+    public static String OUT_GAME = "OUT_GAME";
 }
