@@ -1,17 +1,17 @@
 package com.apcscs494.client;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -19,14 +19,13 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ClientRegisterController implements Initializable {
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
 
     @FXML
     TextField usernameTextField;
     @FXML
     Button registerButton;
+    @FXML
+    Text serverRespText;
 
     Client client;
 
@@ -52,11 +51,8 @@ public class ClientRegisterController implements Initializable {
             @Override
             public void handle(ActionEvent event) {
                 registerUsername();
-                try {
-                    switchToClientApp(event);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+
+                client.listenForRegistrationConfirm(serverRespText);
             }
         });
     }
@@ -66,20 +62,34 @@ public class ClientRegisterController implements Initializable {
             String username = usernameTextField.getText();
             if (username.isEmpty()) return;
 
-            client.sendToServer(username);
+            client.registerPlayer(username);
 
             usernameTextField.clear();
         } catch (Exception e) {
-            System.out.println("Client error at register: " + e.getMessage());
+            System.out.println("Error at clientRegisterController: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public void switchToClientApp(ActionEvent event) throws IOException {
-        root = FXMLLoader.load(ClientApp.class.getResource("client-app.fxml"));
-        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+    public static void handleResponse(String receivedResponse, Text responseText) {
+        Platform.runLater(() -> {
+            responseText.setText(receivedResponse);
+            if (receivedResponse.contains("SUCCESS")) {
+                try {
+                    Scene scene = new Scene(
+                            FXMLLoader.load(
+                                    ClientApp.class.getResource("client-waiting-room.fxml")
+                            )
+                    );
+                    Stage stage = (Stage) responseText.getScene().getWindow();
+                    stage.setScene(scene);
+                    stage.show();
+                } catch (IOException e) {
+                    System.out.println("Error at clientRegisterController: " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 }

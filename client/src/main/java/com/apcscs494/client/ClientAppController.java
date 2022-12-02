@@ -1,15 +1,14 @@
 package com.apcscs494.client;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -20,20 +19,22 @@ public class ClientAppController implements Initializable {
     @FXML
     TextField guessKeywordTextField;
     @FXML
-    Label responseLabel;
+    Text keywordLenLabel = new Text("Keyword length: ");
+    @FXML
+    Text hintLabel = new Text("Hint: ");
     @FXML
     Button submitButton;
 
     Client client;
 
-    public static void setResponse(String receivedResponse, Label responseLabel) {
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                responseLabel.setText(receivedResponse);
-            }
-        });
-    }
+//    public static void setResponse(String receivedResponse, Label responseLabel) {
+//        Platform.runLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                responseLabel.setText(receivedResponse);
+//            }
+//        });
+//    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -45,7 +46,7 @@ public class ClientAppController implements Initializable {
         }
 
         // Listening from server
-        client.receiveResponseFromServer(responseLabel);
+//        client.receiveResponseFromServer(responseLabel);
 
 
         // Set event handlers from UI elements

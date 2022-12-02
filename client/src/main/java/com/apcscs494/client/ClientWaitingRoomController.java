@@ -1,0 +1,53 @@
+package com.apcscs494.client;
+
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class ClientWaitingRoomController implements Initializable {
+    @FXML
+    Pane rootPane;
+
+    Client client;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        try {
+            client = Client.getInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error creating Client.");
+        }
+
+//        client.waitForGameStart(rootPane);
+    }
+
+    public static void handleResponse(String receivedResponse, Pane rootPane) {
+        Platform.runLater(() -> {
+            if (receivedResponse.contains("START")) {
+                try {
+                    Scene scene = new Scene(
+                            FXMLLoader.load(
+                                    ClientApp.class.getResource("client-app.fxml")
+                            )
+                    );
+                    Stage stage = (Stage) rootPane.getScene().getWindow();
+                    stage.setScene(scene);
+                    stage.show();
+                } catch (IOException e) {
+                    System.out.println("Error at waiting room: " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+}
