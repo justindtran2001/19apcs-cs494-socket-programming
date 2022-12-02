@@ -27,7 +27,7 @@ public class ClientWaitingRoomController implements Initializable {
             System.out.println("Error creating Client.");
         }
 
-//        client.waitForGameStart(rootPane);
+        client.waitForGameStart(rootPane);
     }
 
     public static void handleResponse(String receivedResponse, Pane rootPane) {

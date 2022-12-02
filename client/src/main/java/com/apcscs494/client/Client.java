@@ -48,10 +48,6 @@ public class Client {
         }
     }
 
-    public void registerPlayer(String name) throws IOException {
-        sendToServer(name);
-    }
-
     public void sendToServer(String message) throws IOException {
         try {
             writer.write(message);
@@ -66,19 +62,41 @@ public class Client {
     }
 
     public void listenForRegistrationConfirm(Text responseText) {
-        System.out.println("Waiting for registration...");
-        while (socket.isConnected()) {
-            try {
-                String receivedResponse = reader.readLine();
-                System.out.println("Response from server: " + receivedResponse);
+        new Thread(() -> {
+            System.out.println("Waiting for registration...");
+            while (socket.isConnected()) {
+                try {
+                    String receivedResponse = reader.readLine();
+                    System.out.println("Response from server: " + receivedResponse);
 
-                ClientRegisterController.handleResponse(receivedResponse, responseText);
-                break;
-            } catch (Exception e) {
-                System.out.println("Client error at listenForRegistrationConfirm: " + e.getMessage());
-                e.printStackTrace();
-                exit(socket, reader, writer);
+                    ClientRegisterController.handleResponse(receivedResponse, responseText);
+                    break;
+                } catch (Exception e) {
+                    System.out.println("Client error at listenForRegistrationConfirm: " + e.getMessage());
+                    e.printStackTrace();
+                    exit(socket, reader, writer);
+                }
             }
-        }
+        }).start();
+    }
+
+    public void waitForGameStart(Pane rootPane) {
+        new Thread(() -> {
+            System.out.println("...Waiting for game start...");
+            while (socket.isConnected()) {
+                try {
+                    String response = reader.readLine();
+                    System.out.println("Response from server: " + response);
+                    if (response.contains("START")) {
+                        ClientWaitingRoomController.handleResponse(response, rootPane);
+                        break;
+                    }
+                } catch (Exception e) {
+                    System.out.println("Client error at waitForGameStart: " + e.getMessage());
+                    e.printStackTrace();
+                    exit(socket, reader, writer);
+                }
+            }
+        }).start();
     }
 }

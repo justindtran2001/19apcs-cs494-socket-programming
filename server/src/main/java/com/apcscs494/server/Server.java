@@ -14,11 +14,11 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         Scanner sc = new Scanner(System.in);
-        int n = 0;
-        while (n <= 0) {
-            System.out.print("Enter number of players: ");
-            n = sc.nextInt();
-        }
+        int n = 10;
+//        while (n <= 0) {
+//            System.out.print("Enter number of players: ");
+//            n = sc.nextInt();
+//        }
 
         ServerSocket serverSocket = new ServerSocket(PORT, n);
 

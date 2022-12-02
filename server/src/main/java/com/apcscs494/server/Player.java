@@ -94,13 +94,13 @@ class Player implements Runnable {
                 message = reader.readLine();
                 this.broadcast(message, Server.REGISTER);
 
-                if (game.getState() != GameState.END) {
-                    // broadcast game hint and current keyword so far
-                    game.process(message);
-                } else {
-                    // broadcast end game data first then restart
-                    game.restart();
-                }
+//                if (game.getState() != GameState.END) {
+//                    // broadcast game hint and current keyword so far
+//                    game.process(message);
+//                } else {
+//                    // broadcast end game data first then restart
+//                    game.restart();
+//                }
 
             } catch (IOException e) {
                 this.exit();
