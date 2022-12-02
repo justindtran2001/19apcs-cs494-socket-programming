@@ -1,6 +1,5 @@
 package com.apcscs494.clientadmin;
 
-import com.apcscs494.server.Server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,6 +9,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class ClientAdmin {
+    public static final String ADMIN_PHRASE = "admin-thisisadmin";
     private Socket socket = null;
     private BufferedWriter writer = null;
     private BufferedReader reader = null;
@@ -22,20 +22,16 @@ public class ClientAdmin {
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.sc = new Scanner(System.in);
-            this.register();
+            this.registerAdmin();
         } catch (Exception e) {
             System.out.println("Client error at init: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private void register() {
-
-        System.out.print("Enter your username: ");
-        this.username = sc.nextLine();
-
+    private void registerAdmin() {
         try {
-            writer.write(this.username);
+            writer.write(ADMIN_PHRASE);
             writer.newLine();
             writer.flush();
         } catch (Exception e) {
@@ -85,7 +81,7 @@ public class ClientAdmin {
 
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("localhost", Server.PORT);
+            Socket socket = new Socket("localhost", 8386);
             ClientAdmin client = new ClientAdmin(socket);
             client.listenMessage();
             client.sendMessage();

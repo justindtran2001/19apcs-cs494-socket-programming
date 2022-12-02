@@ -62,7 +62,7 @@ public class ClientRegisterController implements Initializable {
             String username = usernameTextField.getText();
             if (username.isEmpty()) return;
 
-            client.registerPlayer(username);
+            client.sendToServer(username);
 
             usernameTextField.clear();
         } catch (Exception e) {

@@ -1,14 +1,20 @@
 package com.apcscs494.server;
 
-import com.apcscs494.server.constants.GameState;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.apcscs494.server.constants.Response;
 
 // A handler for a player/client
 class Player implements Runnable {
-    private static ArrayList<Player> players = new ArrayList<>();
+
+    private static HashMap<Long, Player> players = new HashMap<>();
+    private static Player admin = null;
     private static final Game game;
 
     static {
@@ -29,7 +35,7 @@ class Player implements Runnable {
         return this.username;
     }
 
-    public Player(Socket socket, int maxPlayer) throws IOException {
+    public Player(Socket socket,) throws IOException {
         try {
             this.socket = socket;
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -37,18 +43,18 @@ class Player implements Runnable {
 
             // When a user joined, read the username first
             this.username = reader.readLine();
-            players.add(this);
 
-            this.id = game.register();
-
-            if (players.size() == maxPlayer) {
-                game.start();
+            if (this.username == ClientAdmin.ADMIN_PHRASE) {
+                admin = this;
+            } else {
+                if (players.size() < 10) {
+                    Long register_id = game.register(this.username);
+                    this.id = register_id;
+                    players.put(register_id, this);
+                }
             }
 
-            broadcast("Player " + username + " joined", Server.REGISTER);
-            writer.write("SUCCESS");
-            writer.newLine();
-            writer.flush();
+           
         } catch (Exception e) {
             System.out.println("Client error at init: " + e.getMessage());
             e.printStackTrace();
@@ -58,20 +64,32 @@ class Player implements Runnable {
         }
     }
 
-    public void broadcast(String message, int code) {
+    public void broadcast(String message, String code) {
         //game logic
         //game state broadcasting
-        for (Player p : players) {
+        players.forEach((id, player) -> {
             try {
-                if (this.username != null && !p.username.equals(this.username)) {
-                    p.writer.write(message);
-                    p.writer.newLine();
-                    p.writer.flush();
-                }
+                player.writer.write(message + "," + code);
+                player.writer.newLine();
+                player.writer.flush();
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());
                 exit();
             }
+        });
+    }
+
+    public void broadcastTo(Long id, String message, String code) {
+         try {
+            if (players.containsKey(id)) {
+                Player player = players.get(id);
+                player.writer.write(message + "," + code);
+                player.writer.newLine();
+                player.writer.flush();
+            }
+        } catch (Exception e) {
+            System.out.println("Handler exception at broadcastT: " + e.getMessage());
+            exit();
         }
     }
 
@@ -91,16 +109,29 @@ class Player implements Runnable {
 
         while (this.socket.isConnected()) {
             try {
-                message = reader.readLine();
-                this.broadcast(message, Server.REGISTER);
 
-                if (game.getState() != GameState.END) {
-                    // broadcast game hint and current keyword so far
-                    game.process(message);
+                // receives answer
+                message = reader.readLine();
+                // admin-thisisadmin-SHUTDOWN
+                // TODO
+                
+                
+                // else 
+                Game.GAME_RESPONSE code = game.process(message);
+
+                if (code == Game.GAME_RESPONSE.CONTINUE) {
+                    // continue guessing
+                    broadcastTo(id, "", Response.YOUR_TURN);
+                } else if (code == Game.GAME_RESPONSE.NEXTPLAYER) {
+                    // wrong answer - lost turn;
+                    broadcastTo(id, "", Response.LOST_TURN);
+                    broadcastTo(game.GetNextPlayerId(), "", Response.YOUR_TURN);
                 } else {
-                    // broadcast end game data first then restart
+                    
                     game.restart();
+                    // broadcast(, );
                 }
+
 
             } catch (IOException e) {
                 this.exit();

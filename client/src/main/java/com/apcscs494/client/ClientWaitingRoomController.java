@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class ClientWaitingRoomController implements Initializable {
@@ -27,7 +28,7 @@ public class ClientWaitingRoomController implements Initializable {
             System.out.println("Error creating Client.");
         }
 
-//        client.waitForGameStart(rootPane);
+        client.waitForGameStart(rootPane);
     }
 
     public static void handleResponse(String receivedResponse, Pane rootPane) {
@@ -36,7 +37,7 @@ public class ClientWaitingRoomController implements Initializable {
                 try {
                     Scene scene = new Scene(
                             FXMLLoader.load(
-                                    ClientApp.class.getResource("client-app.fxml")
+                                    Objects.requireNonNull(ClientApp.class.getResource("client-app.fxml"))
                             )
                     );
                     Stage stage = (Stage) rootPane.getScene().getWindow();
