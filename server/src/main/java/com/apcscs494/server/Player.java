@@ -83,6 +83,18 @@ class Player implements Runnable {
 
     private void restartGameHandler() {
         game.restart();
+        players.forEach((id, player) -> {
+            try {
+                player.writer.write(
+                        Player.game.getCurrentKeyWordState() + "-" +
+                                Player.game.getCurrentQuestion().getHint() + "," + Response.CURRENT_KEYWORD);
+                player.writer.newLine();
+                player.writer.flush();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+            }
+        });
+
         broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
     }
 
@@ -90,6 +102,8 @@ class Player implements Runnable {
         if (game.getState() == GameState.FORCE_END) {
             return;
         }
+
+        if (message == null) return;
 
         Game.RESPONSE code = game.process(message);
 
@@ -125,7 +139,7 @@ class Player implements Runnable {
                 player.writer.flush();
                 if (code == Response.OUT_GAME) {
                     players.remove(id);
-                    player.exit();
+//                    player.exit();
                 }
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());

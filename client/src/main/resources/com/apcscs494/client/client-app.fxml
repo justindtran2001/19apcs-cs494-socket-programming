@@ -12,10 +12,10 @@
    <TextField fx:id="guessKeywordTextField" layoutX="73.0" layoutY="301.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess the keyword" />
    <AnchorPane layoutX="73.0" layoutY="81.0" prefHeight="149.0" prefWidth="280.0">
       <children>
-         <Text fx:id="keywordLenLabel" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Keyword length: " />
+         <Text fx:id="keywordLabel" strokeType="OUTSIDE" strokeWidth="0.0" text="Keyword: " />
          <TextFlow layoutY="29.0">
             <children>
-               <Text fx:id="hintLabel" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Hint: " wrappingWidth="41.50520324707031" />
+               <Text fx:id="hintLabel" strokeType="OUTSIDE" strokeWidth="0.0" text="Hint: " wrappingWidth="41.50520324707031" />
             </children>
          </TextFlow>
       </children>

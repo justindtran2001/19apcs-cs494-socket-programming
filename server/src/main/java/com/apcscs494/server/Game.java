@@ -106,9 +106,9 @@ class Game {
 
     public ArrayList<GamePlayerData> getResults() {
         ArrayList<GamePlayerData> results = playerList.ToList();
-        this.restart();
         if (winnerId == -1)
             return null;
+        this.restart();
         return results;
     }
 
@@ -118,19 +118,27 @@ class Game {
 
     public RESPONSE process(String message) {
         total_turn += 1;
-        String[] answer = message.split(",");
         GamePlayerData playerData = playerList.GetCurrent();
+        if (message.equals("(na),(na)")) {
+            playerData.AddTurn();
+            playerList.MoveNext();
+            return RESPONSE.NEXT_PLAYER;
+        }
+
+        String[] answer = message.split(",");
 
         if (this.forceEndGame()) {
             return RESPONSE.END;
         }
 
-        if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
-            playerData.AddPoint(5);
-            playerData.SetKeyWordWinner();
-            winnerId = playerData.id;
-            return RESPONSE.END;
-        }
+        // "(string), (string)"
+        if (answer.length > 1)
+            if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
+                playerData.AddPoint(5);
+                playerData.SetKeyWordWinner();
+                winnerId = playerData.id;
+                return RESPONSE.END;
+            }
 
         if (currentQuestion.guessACharacter(answer[0].charAt(0))) {
             playerData.AddPoint(1);
@@ -144,5 +152,9 @@ class Game {
 
     public Long getNextPlayerId() {
         return playerList.GetCurrent().id;
+    }
+
+    public Question getCurrentQuestion() {
+        return currentQuestion;
     }
 }

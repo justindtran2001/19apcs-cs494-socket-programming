@@ -1,5 +1,6 @@
 package com.apcscs494.client;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -19,22 +20,17 @@ public class ClientAppController implements Initializable {
     @FXML
     TextField guessKeywordTextField;
     @FXML
-    Text keywordLenLabel = new Text("Keyword length: ");
+    Text keywordLabel = new Text("Keyword length: ");
     @FXML
     Text hintLabel = new Text("Hint: ");
     @FXML
     Button submitButton;
 
-    Client client;
+    // TODO: Text for response detail message
 
-//    public static void setResponse(String receivedResponse, Label responseLabel) {
-//        Platform.runLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                responseLabel.setText(receivedResponse);
-//            }
-//        });
-//    }
+    static State currentState = State.WAITING;
+
+    Client client;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -50,6 +46,7 @@ public class ClientAppController implements Initializable {
 
 
         // Set event handlers from UI elements
+        guessCharTextField.setDisable(true);
         guessCharTextField.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
@@ -58,6 +55,7 @@ public class ClientAppController implements Initializable {
                 }
             }
         });
+        guessKeywordTextField.setDisable(true);
         guessKeywordTextField.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
@@ -72,23 +70,65 @@ public class ClientAppController implements Initializable {
                 sendAnswerToServer();
             }
         });
+
+        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField);
     }
 
     public void sendAnswerToServer() {
+        if (currentState == State.WAITING) return;
+
         try {
             String guessChar = guessCharTextField.getText();
             String guessKeyword = guessKeywordTextField.getText();
-            if (guessChar.isEmpty()) return;
+            if (guessChar.isEmpty() && guessKeyword.isEmpty()) {
+                System.out.println("Submit answer: " + "(na),(na)");
+                client.sendToServer("(na),(na)");
+                guessCharTextField.clear();
+                guessKeywordTextField.clear();
+                return;
+            }
+
+            if (guessChar.isEmpty())
+                guessChar = "(na)";
 
             String answer = guessChar + "," + guessKeyword;
+            System.out.println("Submit answer: " + answer);
 
             client.sendToServer(answer);
 
             guessCharTextField.clear();
             guessKeywordTextField.clear();
         } catch (Exception e) {
-            System.out.println("Client error at register: " + e.getMessage());
+            System.out.println("Client error at sendAnswerToServer: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public static void setKeyword(String keyword, Text keywordLabel) {
+        Platform.runLater(() -> {
+            keywordLabel.setText("Keyword: " + keyword);
+        });
+    }
+
+    public static void setHint(String hint, Text hintLabel) {
+        Platform.runLater(() -> {
+            hintLabel.setText("Hint: " + hint);
+        });
+    }
+
+    public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField) {
+        currentState = State.MY_TURN;
+        Platform.runLater(() -> {
+            guessCharTextField.setDisable(false);
+            guessKeywordTextField.setDisable(false);
+        });
+    }
+
+    public static void setLostTurn(TextField guessCharTextField, TextField guessKeywordTextField) {
+        currentState = State.WAITING;
+        Platform.runLater(() -> {
+            guessCharTextField.setDisable(true);
+            guessKeywordTextField.setDisable(true);
+        });
     }
 }

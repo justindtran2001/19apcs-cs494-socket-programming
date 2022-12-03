@@ -61,6 +61,8 @@ public class ServerAppController implements Initializable {
     private void startNewGame() {
         Player.game.restart();
         server.broadcastAllToStartGame();
+        server.sendQuestion();
+        server.chooseNextPlayer();
     }
 
 

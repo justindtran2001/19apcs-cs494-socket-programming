@@ -164,4 +164,33 @@ class Server {
             }
         });
     }
+
+    public void sendQuestion() {
+        Player.players.forEach((id, player) -> {
+            try {
+                player.writer.write(
+                        Player.game.getCurrentKeyWordState() + "-" +
+                                Player.game.getCurrentQuestion().getHint() + "," + Response.CURRENT_KEYWORD);
+                player.writer.newLine();
+                player.writer.flush();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+            }
+        });
+    }
+
+    public void chooseNextPlayer() {
+        try {
+            Long id = Player.game.getNextPlayerId();
+            if (Player.players.containsKey(id)) {
+                Player player = Player.players.get(id);
+                player.writer.write("" + "," + Response.YOUR_TURN);
+                player.writer.newLine();
+                player.writer.flush();
+            }
+        } catch (Exception e) {
+            System.out.println("Handler exception at broadcastT: " + e.getMessage());
+            exit();
+        }
+    }
 }
