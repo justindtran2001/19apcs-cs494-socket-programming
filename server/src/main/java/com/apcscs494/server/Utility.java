@@ -3,6 +3,7 @@ package com.apcscs494.server;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.apcscs494.server.constants.AdminCode;
 import com.google.gson.Gson;
 
 public class Utility {
@@ -19,7 +20,7 @@ public class Utility {
     }
 
     public static boolean isFromAdmin(String message) {
-        return message.contains(ClientAdmin.ADMIN_PHRASE);
+        return message.contains(AdminCode.ADMIN_PHRASE);
     }
 
     public static boolean hasEnoughPlayers(HashMap<Long, Player> players) {

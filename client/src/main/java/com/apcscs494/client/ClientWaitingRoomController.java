@@ -1,5 +1,6 @@
 package com.apcscs494.client;
 
+import com.apcscs494.client.constants.ResponseCode;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -33,7 +34,9 @@ public class ClientWaitingRoomController implements Initializable {
 
     public static void handleResponse(String receivedResponse, Pane rootPane) {
         Platform.runLater(() -> {
-            if (receivedResponse.contains("START")) {
+            String[] resp = receivedResponse.split(",");
+            if (resp[1].equals(ResponseCode.START_GAME)) {
+                System.out.println(resp[0]);
                 try {
                     Scene scene = new Scene(
                             FXMLLoader.load(

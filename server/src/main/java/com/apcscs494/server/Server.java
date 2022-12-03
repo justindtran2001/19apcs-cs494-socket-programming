@@ -1,5 +1,7 @@
 package com.apcscs494.server;
 
+import com.apcscs494.server.constants.Response;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,8 +29,8 @@ class Server {
     public Server(ServerSocket serverSocket) throws IOException {
         try {
             this.serverSocket = serverSocket;
-            serverSocket.setSoTimeout(10000);
-            this.socket = new Socket("localhost", PORT);;
+//            serverSocket.setSoTimeout(10000);
+            this.socket = new Socket("localhost", PORT);
             this.socket = serverSocket.accept();
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -44,12 +46,25 @@ class Server {
         }
     }
 
-    private void exit(Socket socket, BufferedReader reader, BufferedWriter writer) {
+
+    public void exit() {
         try {
             if (writer != null) writer.close();
             if (reader != null) reader.close();
             if (socket != null) socket.close();
             if (serverSocket != null) serverSocket.close();
+        } catch (IOException e) {
+            System.out.println("Handler exception at exit: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void exit(Socket socket, BufferedReader reader, BufferedWriter writer) {
+        try {
+            if (writer != null) writer.close();
+            if (reader != null) reader.close();
+            if (socket != null) socket.close();
+            if (this.serverSocket != null) this.serverSocket.close();
         } catch (IOException e) {
             System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
@@ -105,5 +120,48 @@ class Server {
                 }
             }
         }).start();
+    }
+
+    public void notifyEndGame() {
+        Player.players.forEach((id, player) -> {
+            try {
+                player.writer.write("Game ended by Admin" + "," + Response.OUT_GAME);
+                player.writer.newLine();
+                player.writer.flush();
+
+                Player.players.remove(id);
+                player.exit();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+                player.exit();
+            }
+        });
+    }
+
+    void notifyNextPlayer() {
+        Long nextPlayerId = Player.game.getNextPlayerId();
+        try {
+            if (Player.players.containsKey(nextPlayerId)) {
+                Player player = Player.players.get(nextPlayerId);
+                player.writer.write("" + "," + Response.YOUR_TURN);
+                player.writer.newLine();
+                player.writer.flush();
+            }
+        } catch (Exception e) {
+            System.out.println("Handler exception at broadcastT: " + e.getMessage());
+            exit();
+        }
+    }
+
+    public void broadcastAllToStartGame() {
+        Player.players.forEach((id, player) -> {
+            try {
+                player.writer.write("Game started by Admin" + "," + Response.START_GAME);
+                player.writer.newLine();
+                player.writer.flush();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+            }
+        });
     }
 }
