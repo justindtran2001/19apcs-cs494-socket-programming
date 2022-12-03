@@ -29,6 +29,7 @@ public class ServerAppController implements Initializable {
 
         try {
             server.acceptingPlayers();
+            server.listenMessage();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
