@@ -155,11 +155,11 @@ class Player implements Runnable {
                 player.writer.flush();
                 if (code == Response.OUT_GAME) {
                     players.remove(id);
-                    exit();
+                    player.exit();
                 }
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());
-                exit();
+                player.exit();
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.apcscs494.clientadmin;
+package com.apcscs494.server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -6,6 +6,6 @@
 
 <?import javafx.scene.control.Button?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.apcscs494.clientadmin.ClientAdmin">
+      fx:controller="com.apcscs494.server.ClientAdmin">
 
 </VBox>
