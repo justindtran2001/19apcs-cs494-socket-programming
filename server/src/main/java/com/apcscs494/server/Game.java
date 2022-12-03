@@ -16,11 +16,11 @@ import com.apcscs494.server.constants.GameState;
 */
 
 class Game {
-    public static enum GAME_RESPONSE {
+    public enum RESPONSE {
         CONTINUE,
-        NEXTPLAYER,
+        NEXT_PLAYER,
         END,
-    };
+    }
 
     public Integer total_turn = 0;
 
@@ -106,9 +106,9 @@ class Game {
 
     public ArrayList<GamePlayerData> getResults() {
         ArrayList<GamePlayerData> results = playerList.ToList();
-        this.restart();
         if (winnerId == -1)
             return null;
+        this.restart();
         return results;
     }
 
@@ -116,33 +116,45 @@ class Game {
         return playerList.HasForceEndCondition();
     }
 
-    public GAME_RESPONSE process(String message) {
+    public RESPONSE process(String message) {
         total_turn += 1;
-        String[] answer = message.split(",");
         GamePlayerData playerData = playerList.GetCurrent();
+        if (message.equals("(na),(na)")) {
+            playerData.AddTurn();
+            playerList.MoveNext();
+            return RESPONSE.NEXT_PLAYER;
+        }
+
+        String[] answer = message.split(",");
 
         if (this.forceEndGame()) {
-            return GAME_RESPONSE.END;
+            return RESPONSE.END;
         }
 
-        if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
-            playerData.AddPoint(5);
-            playerData.SetKeyWordWinner();
-            winnerId = playerData.id;
-            return GAME_RESPONSE.END;
-        }
+        // "(string), (string)"
+        if (answer.length > 1)
+            if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
+                playerData.AddPoint(5);
+                playerData.SetKeyWordWinner();
+                winnerId = playerData.id;
+                return RESPONSE.END;
+            }
 
         if (currentQuestion.guessACharacter(answer[0].charAt(0))) {
             playerData.AddPoint(1);
-            return GAME_RESPONSE.CONTINUE;
+            return RESPONSE.CONTINUE;
         } else {
             playerData.AddTurn();
             playerList.MoveNext();
-            return GAME_RESPONSE.NEXTPLAYER;
+            return RESPONSE.NEXT_PLAYER;
         }
     }
 
     public Long getNextPlayerId() {
         return playerList.GetCurrent().id;
+    }
+
+    public Question getCurrentQuestion() {
+        return currentQuestion;
     }
 }

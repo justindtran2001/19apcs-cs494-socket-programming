@@ -1,5 +1,7 @@
 package com.apcscs494.client;
 
+import com.apcscs494.client.constants.ResponseCode;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 
@@ -98,6 +100,50 @@ public class Client {
                     System.out.println("Client error at waitForGameStart: " + e.getMessage());
                     e.printStackTrace();
                     exit(socket, reader, writer);
+                }
+            }
+        }).start();
+    }
+
+    public void listenForGameResponse(Text keywordLabel, Text hintLabel, TextField guessCharTextField, TextField guessKeywordTextField) {
+        new Thread(() -> {
+            System.out.println("Waiting for question...");
+            while (socket.isConnected()) {
+                try {
+                    String receivedResponse = reader.readLine();
+                    System.out.println("Response from game server: " + receivedResponse);
+
+                    String[] resp = receivedResponse.split(",");
+                    String code = resp[resp.length - 1];
+
+                    if (code.equals(ResponseCode.CURRENT_KEYWORD)) {
+                        StringBuilder keywordAndHint = new StringBuilder(resp[0]);
+                        for (int i = 1; i < resp.length - 1; ++i)
+                            keywordAndHint.append(", ").append(resp[i]);
+
+                        String[] afterSplit = keywordAndHint.toString().split("-");
+                        ClientAppController.setKeyword(keywordAndHint.toString().split("-")[0], keywordLabel);
+
+                        if (afterSplit.length > 1)
+                            ClientAppController.setHint(keywordAndHint.toString().split("-")[1], hintLabel);
+                    } else if (code.equals(ResponseCode.YOUR_TURN)) {
+                        ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField);
+                    } else if (code.equals(ResponseCode.LOST_TURN)) {
+                        ClientAppController.setLostTurn(guessCharTextField, guessKeywordTextField);
+                    } else if (code.equals(ResponseCode.END_GAME)) {
+                        // TODO: Show scoreboard
+
+                    } else if (code.equals(ResponseCode.OUT_GAME)) {
+                        exit(socket, reader, writer);
+                        // TODO: Exit application
+                        return;
+                    }
+
+                } catch (Exception e) {
+                    System.out.println("Client error at listenForGameResponse: " + e.getMessage());
+                    e.printStackTrace();
+                    exit(socket, reader, writer);
+                    return;
                 }
             }
         }).start();

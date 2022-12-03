@@ -33,7 +33,18 @@ public class Question {
     }
 
     public boolean guessTheKeyword(String guessKeyword) {
-        return this.keyword.equals(guessKeyword);
+        System.out.println("Question.guessTheKeyword()");
+        System.out.println(keyword);
+        System.out.println(guessKeyword);
+        return this.keyword.equalsIgnoreCase(guessKeyword);
+    }
+
+    public Integer getLength() {
+        return keyword.length();
+    }
+
+    public String getHint() {
+        return hint;
     }
 
     @Override

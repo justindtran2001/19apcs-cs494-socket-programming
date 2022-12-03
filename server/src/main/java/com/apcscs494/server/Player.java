@@ -15,12 +15,12 @@ import com.apcscs494.server.constants.Response;
 // A handler for a player/client
 class Player implements Runnable {
 
-    private static HashMap<Long, Player> players = new HashMap<>();
-    private static Player admin = null;
-    private static final Game game;
+    static HashMap<Long, Player> players = new HashMap<>();
+    //    private static Player admin = null;
+    static final Game game;
 
     private Socket socket = null;
-    private BufferedWriter writer = null;
+    BufferedWriter writer = null;
     private BufferedReader reader = null;
     private String username = null;
     private Long id = null;
@@ -33,10 +33,6 @@ class Player implements Runnable {
         }
     }
 
-    public String getUsername() {
-        return this.username;
-    }
-
     public Player(Socket socket) throws IOException {
         try {
             this.socket = socket;
@@ -46,33 +42,20 @@ class Player implements Runnable {
             // When a user joined, read the username first
             this.username = reader.readLine();
 
-            if (this.username == ClientAdmin.ADMIN_PHRASE) {
-                admin = this;
+            if (players.size() < Server.MAX_PLAYER) {
+                Long register_id = game.register(this.username);
+                this.id = register_id;
+                players.put(register_id, this);
+
+                writer.write("SUCCESS");
+                writer.newLine();
+                writer.flush();
             } else {
-                if (players.size() < Server.MAX_PLAYER) {
-                    Long register_id = game.register(this.username);
-                    this.id = register_id;
-                    players.put(register_id, this);
-                } else {
-                    writer.write("ROOM IS FULL");
-                    writer.newLine();
-                    writer.flush();
-                    exit();
-                }
+                writer.write("ROOM IS FULL");
+                writer.newLine();
+                writer.flush();
+                exit();
             }
-
-            if (admin != null) {
-                if (Utility.hasEnoughPlayers(players)) {
-                    admin.writer.write(ClientAdmin.CAN_START);
-                    admin.writer.newLine();
-                    admin.writer.flush();
-                } else {
-                    admin.writer.write(ClientAdmin.CAN_NOT_START);
-                    admin.writer.newLine();
-                    admin.writer.flush();
-                }
-            }
-
         } catch (Exception e) {
             System.out.println("Client error at init: " + e.getMessage());
             e.printStackTrace();
@@ -89,11 +72,7 @@ class Player implements Runnable {
             try {
                 // receives message from client
                 message = reader.readLine();
-                if (Utility.isFromAdmin(message)) {
-                    AdminHandler(message);
-                } else {
-                    ClientHandler(message);
-                }
+                ClientHandler(message);
             } catch (IOException e) {
                 this.exit();
                 break;
@@ -102,8 +81,20 @@ class Player implements Runnable {
 
     }
 
-    private void RestartGameHandler() {
+    private void restartGameHandler() {
         game.restart();
+        players.forEach((id, player) -> {
+            try {
+                player.writer.write(
+                        Player.game.getCurrentKeyWordState() + "-" +
+                                Player.game.getCurrentQuestion().getHint() + "," + Response.CURRENT_KEYWORD);
+                player.writer.newLine();
+                player.writer.flush();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+            }
+        });
+
         broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
     }
 
@@ -112,13 +103,15 @@ class Player implements Runnable {
             return;
         }
 
-        Game.GAME_RESPONSE code = game.process(message);
+        if (message == null) return;
 
-        if (code == Game.GAME_RESPONSE.CONTINUE) {
+        Game.RESPONSE code = game.process(message);
+
+        if (code == Game.RESPONSE.CONTINUE) {
             // continue guessing
             broadcastAll(game.getCurrentKeyWordState(), Response.CURRENT_KEYWORD);
             broadcastTo(id, "", Response.YOUR_TURN);
-        } else if (code == Game.GAME_RESPONSE.NEXTPLAYER) {
+        } else if (code == Game.RESPONSE.NEXT_PLAYER) {
             // wrong answer - lost turn;
             broadcastTo(id, "", Response.LOST_TURN);
             broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
@@ -133,17 +126,8 @@ class Player implements Runnable {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
             } finally {
-                RestartGameHandler();
+                restartGameHandler();
             }
-        }
-    }
-
-    private void AdminHandler(String message) {
-        if (message.contains("START") && Utility.hasEnoughPlayers(players)) {
-            RestartGameHandler();
-        } else {
-            game.endByAdmin();
-            broadcastAll("Game ended by Admin", Response.OUT_GAME);
         }
     }
 
@@ -155,11 +139,11 @@ class Player implements Runnable {
                 player.writer.flush();
                 if (code == Response.OUT_GAME) {
                     players.remove(id);
-                    exit();
+//                    player.exit();
                 }
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());
-                exit();
+                player.exit();
             }
         });
     }
@@ -178,7 +162,7 @@ class Player implements Runnable {
         }
     }
 
-    private void exit() {
+    void exit() {
         try {
             this.writer.close();
             this.reader.close();

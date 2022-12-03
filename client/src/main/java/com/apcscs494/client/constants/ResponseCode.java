@@ -1,6 +1,6 @@
-package com.apcscs494.server.constants;
+package com.apcscs494.client.constants;
 
-public class Response {
+public class ResponseCode {
     public static final String START_GAME = "START_GAME";
     public static final String LOST_TURN = "LOST_TURN";
     public static final String YOUR_TURN = "YOUR_TURN";
