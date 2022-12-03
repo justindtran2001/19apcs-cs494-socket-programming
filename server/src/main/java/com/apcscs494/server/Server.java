@@ -3,6 +3,7 @@ package com.apcscs494.server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 class Server {
@@ -23,29 +24,23 @@ class Server {
 
     private static final ReentrantLock mutex = new ReentrantLock();
 
-    public Server(ServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
-        new Thread(() -> {
-            try {
-                this.socket = this.serverSocket.accept();
-                this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-    }
-
-    public Server() {
+    public Server(ServerSocket serverSocket) throws IOException {
         try {
-            this.serverSocket = new ServerSocket(8386, 10);
+            this.serverSocket = serverSocket;
+            serverSocket.setSoTimeout(10000);
+            this.socket = new Socket("localhost", PORT);;
             this.socket = serverSocket.accept();
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        } catch (IOException e) {
-            System.out.println("Server error at init: " + e.getMessage());
+        } catch (SocketTimeoutException e) {
+            System.out.println("ServerSocket.accept() is timed out");
             e.printStackTrace();
-//            exit(socket, reader, writer);
+            exit(socket, reader, writer);
+            serverSocket.close();
+        } catch (IOException e) {
+            System.out.println("Error at Server constructor: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -88,11 +83,9 @@ class Server {
 
     public void sendMessage(String message) {
         try {
-            while (socket.isConnected()) {
-                writer.write(message);
-                writer.newLine();
-                writer.flush();
-            }
+            writer.write(message);
+            writer.newLine();
+            writer.flush();
         } catch (Exception e) {
             System.out.println("Server error at sendMessage: " + e.getMessage());
         }
@@ -108,6 +101,7 @@ class Server {
                 } catch (Exception e) {
                     System.out.println("Server error at listenMessage: " + e.getMessage());
                     exit(socket, reader, writer);
+                    break;
                 }
             }
         }).start();

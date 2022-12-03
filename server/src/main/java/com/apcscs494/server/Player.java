@@ -53,6 +53,10 @@ class Player implements Runnable {
                     Long register_id = game.register(this.username);
                     this.id = register_id;
                     players.put(register_id, this);
+
+                    writer.write("SUCCESS");
+                    writer.newLine();
+                    writer.flush();
                 } else {
                     writer.write("ROOM IS FULL");
                     writer.newLine();

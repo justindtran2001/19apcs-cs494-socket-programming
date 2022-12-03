@@ -3,12 +3,9 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.AnchorPane?>
 
-
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.apcscs494.server.ServerAppController">
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.server.ServerAppController">
     <children>
-        <Button fx:id="startGameButton" layoutX="253.0" layoutY="166.0" mnemonicParsing="false" text="START GAME"/>
-        <Button fx:id="endGameButton" layoutX="253.0" layoutY="209.0" mnemonicParsing="false" prefHeight="26.0"
-                prefWidth="94.0" text="END GAME"/>
+        <Button fx:id="startGameButton" layoutX="253.0" layoutY="166.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="94.0" text="START GAME" />
+        <Button fx:id="endGameButton" layoutX="253.0" layoutY="209.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="94.0" text="END GAME" />
     </children>
 </AnchorPane>
