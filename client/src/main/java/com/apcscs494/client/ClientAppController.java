@@ -6,6 +6,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -20,11 +21,13 @@ public class ClientAppController implements Initializable {
     @FXML
     TextField guessKeywordTextField;
     @FXML
-    Text keywordLabel = new Text("Keyword length: ");
+    Label keywordLabel;
     @FXML
-    Text hintLabel = new Text("Hint: ");
+    Label hintLabel;
     @FXML
     Button submitButton;
+    @FXML
+    Label serverResponseMessageLabel;
 
     // TODO: Text for response detail message
 
@@ -71,7 +74,7 @@ public class ClientAppController implements Initializable {
             }
         });
 
-        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField);
+        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField, serverResponseMessageLabel);
     }
 
     public void sendAnswerToServer() {
@@ -104,13 +107,13 @@ public class ClientAppController implements Initializable {
         }
     }
 
-    public static void setKeyword(String keyword, Text keywordLabel) {
+    public static void setKeyword(String keyword, Label keywordLabel) {
         Platform.runLater(() -> {
             keywordLabel.setText("Keyword: " + keyword);
         });
     }
 
-    public static void setHint(String hint, Text hintLabel) {
+    public static void setHint(String hint, Label hintLabel) {
         Platform.runLater(() -> {
             hintLabel.setText("Hint: " + hint);
         });

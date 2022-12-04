@@ -1,6 +1,7 @@
 package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ResponseCode;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -105,7 +106,13 @@ public class Client {
         }).start();
     }
 
-    public void listenForGameResponse(Text keywordLabel, Text hintLabel, TextField guessCharTextField, TextField guessKeywordTextField) {
+    public void listenForGameResponse(
+            Label keywordLabel,
+            Label hintLabel,
+            TextField guessCharTextField,
+            TextField guessKeywordTextField,
+            Label serverResponseMessageText
+    ) {
         new Thread(() -> {
             System.out.println("Waiting for question...");
             while (socket.isConnected()) {
@@ -119,13 +126,22 @@ public class Client {
                     if (code.equals(ResponseCode.CURRENT_KEYWORD)) {
                         StringBuilder keywordAndHint = new StringBuilder(resp[0]);
                         for (int i = 1; i < resp.length - 1; ++i)
-                            keywordAndHint.append(", ").append(resp[i]);
+                            keywordAndHint.append(",").append(resp[i]);
 
                         String[] afterSplit = keywordAndHint.toString().split("-");
-                        ClientAppController.setKeyword(keywordAndHint.toString().split("-")[0], keywordLabel);
+                        String keyword = afterSplit[0];
+                        if (afterSplit.length > 1) {
+                            StringBuilder hint = new StringBuilder(afterSplit[1]);
+                            if (afterSplit.length > 2) {
+                                for (int i = 2; i < afterSplit.length; ++i)
+                                    hint.append("-").append(afterSplit[i]);
+                            }
+                            ClientAppController.setKeyword(keyword, keywordLabel);
 
-                        if (afterSplit.length > 1)
-                            ClientAppController.setHint(keywordAndHint.toString().split("-")[1], hintLabel);
+                            if (hint.length() > 0)
+                                ClientAppController.setHint(hint.toString(), hintLabel);
+                        } else
+                            ClientAppController.setKeyword(keyword, keywordLabel);
                     } else if (code.equals(ResponseCode.YOUR_TURN)) {
                         ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField);
                     } else if (code.equals(ResponseCode.LOST_TURN)) {
