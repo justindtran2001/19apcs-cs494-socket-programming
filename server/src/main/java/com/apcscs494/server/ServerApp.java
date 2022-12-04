@@ -13,6 +13,7 @@ public class ServerApp extends Application {
 
             Scene scene = new Scene(fxmlLoader.load());
             stage.setTitle("The Magical Wheel (server)");
+            stage.setResizable(false);
             stage.setScene(scene);
             stage.show();
         } catch (Exception exception) {

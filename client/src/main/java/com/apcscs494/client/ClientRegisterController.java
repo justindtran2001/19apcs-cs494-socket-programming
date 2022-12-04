@@ -1,8 +1,7 @@
 package com.apcscs494.client;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -10,7 +9,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -39,21 +37,15 @@ public class ClientRegisterController implements Initializable {
         }
 
         // Set event handlers from UI elements
-        usernameTextField.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode().equals(KeyCode.ENTER)) {
-                    registerButton.fire();
-                }
+        usernameTextField.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode().equals(KeyCode.ENTER)) {
+                registerButton.fire();
             }
         });
-        registerButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                registerUsername();
+        registerButton.setOnAction(event -> {
+            registerUsername();
 
-                client.listenForRegistrationConfirm(serverRespText);
-            }
+            client.listenForRegistrationConfirm(serverRespText);
         });
     }
 
@@ -83,6 +75,7 @@ public class ClientRegisterController implements Initializable {
                     );
                     Stage stage = (Stage) responseText.getScene().getWindow();
                     stage.setScene(scene);
+                    stage.setResizable(false);
                     stage.show();
                 } catch (IOException e) {
                     System.out.println("Error at clientRegisterController: " + e.getMessage());

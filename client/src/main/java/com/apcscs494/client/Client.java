@@ -2,12 +2,15 @@ package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ResponseCode;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     private static Client instance;
@@ -111,55 +114,87 @@ public class Client {
             Label hintLabel,
             TextField guessCharTextField,
             TextField guessKeywordTextField,
-            Label serverResponseMessageText
+            Label serverResponseMessageLabel,
+            TableView<GamePlayerScore> scoreboardTableView
     ) {
-        new Thread(() -> {
-            System.out.println("Waiting for question...");
-            while (socket.isConnected()) {
-                try {
-                    String receivedResponse = reader.readLine();
-                    System.out.println("Response from game server: " + receivedResponse);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                {
+                    System.out.println("Listening for game response...");
+                    while (socket.isConnected()) {
+                        try {
+                            String receivedResponse = reader.readLine();
+                            System.out.println("Response from game server: " + receivedResponse);
 
-                    String[] resp = receivedResponse.split(",");
-                    String code = resp[resp.length - 1];
+                            String[] resp = receivedResponse.split(",");
+                            String code = resp[resp.length - 1];
 
-                    if (code.equals(ResponseCode.CURRENT_KEYWORD)) {
-                        StringBuilder keywordAndHint = new StringBuilder(resp[0]);
-                        for (int i = 1; i < resp.length - 1; ++i)
-                            keywordAndHint.append(",").append(resp[i]);
+                            switch (code) {
+                                case ResponseCode.CURRENT_KEYWORD -> {
+                                    StringBuilder keywordAndHint = new StringBuilder(resp[0]);
+                                    for (int i = 1; i < resp.length - 1; ++i)
+                                        keywordAndHint.append(",").append(resp[i]);
+                                    String[] afterSplit = keywordAndHint.toString().split("-");
+                                    String keyword = afterSplit[0];
+                                    if (afterSplit.length > 1) {
+                                        StringBuilder hint = new StringBuilder(afterSplit[1]);
+                                        if (afterSplit.length > 2) {
+                                            for (int i = 2; i < afterSplit.length; ++i)
+                                                hint.append("-").append(afterSplit[i]);
+                                        }
+                                        ClientAppController.setKeyword(keyword, keywordLabel);
 
-                        String[] afterSplit = keywordAndHint.toString().split("-");
-                        String keyword = afterSplit[0];
-                        if (afterSplit.length > 1) {
-                            StringBuilder hint = new StringBuilder(afterSplit[1]);
-                            if (afterSplit.length > 2) {
-                                for (int i = 2; i < afterSplit.length; ++i)
-                                    hint.append("-").append(afterSplit[i]);
+                                        if (hint.length() > 0)
+                                            ClientAppController.setHint(hint.toString(), hintLabel);
+                                    } else
+                                        ClientAppController.setKeyword(keyword, keywordLabel);
+                                }
+                                case ResponseCode.YOUR_TURN -> {
+                                    ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField);
+                                    continue;
+                                }
+                                case ResponseCode.END_GAME -> {
+                                    StringBuilder playerInfoCharSeq = new StringBuilder(resp[0]);
+                                    for (int i = 1; i < resp.length - 1; ++i)
+                                        playerInfoCharSeq.append(",").append(resp[i]);
+                                    StringBuilder displayMessage = new StringBuilder();
+                                    String[] playerInfo = playerInfoCharSeq.toString().split("##");
+                                    ArrayList<GamePlayerScore> gamePlayerData = new ArrayList<>();
+                                    for (String aPlayerInfo : playerInfo) {
+                                        String[] info = aPlayerInfo.split(",");
+                                        if (info.length != 5)
+                                            throw new Exception("Invalid player info format");
+                                        GamePlayerScore aPlayerData = new GamePlayerScore(
+                                                Long.parseLong(info[0]), // ID
+                                                info[1], // Username
+                                                Integer.parseInt(info[2]) // Score
+                                        );
+                                        gamePlayerData.add(aPlayerData);
+
+                                        if (Boolean.parseBoolean(info[4])) { // IsWinner
+                                            displayMessage.append("CONGRATULATION! YOU'RE THE WINNER!\n");
+                                        }
+                                    }
+                                    ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
+//                                String scoreboard = playerInfoCharSeq.toString().replace("##", "\n");
+                                    ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageLabel);
+                                    TimeUnit.SECONDS.sleep(10); // wait 10 seconds before starting new game
+                                }
+                                case ResponseCode.OUT_GAME -> {
+                                    exit(socket, reader, writer);
+                                    // TODO: Exit application
+                                    return;
+                                }
                             }
-                            ClientAppController.setKeyword(keyword, keywordLabel);
-
-                            if (hint.length() > 0)
-                                ClientAppController.setHint(hint.toString(), hintLabel);
-                        } else
-                            ClientAppController.setKeyword(keyword, keywordLabel);
-                    } else if (code.equals(ResponseCode.YOUR_TURN)) {
-                        ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField);
-                    } else if (code.equals(ResponseCode.LOST_TURN)) {
-                        ClientAppController.setLostTurn(guessCharTextField, guessKeywordTextField);
-                    } else if (code.equals(ResponseCode.END_GAME)) {
-                        // TODO: Show scoreboard
-
-                    } else if (code.equals(ResponseCode.OUT_GAME)) {
-                        exit(socket, reader, writer);
-                        // TODO: Exit application
-                        return;
+                            ClientAppController.disableTextFields(guessCharTextField, guessKeywordTextField);
+                        } catch (Exception e) {
+                            System.out.println("Client error at listenForGameResponse: " + e.getMessage());
+                            e.printStackTrace();
+                            exit(socket, reader, writer);
+                            return;
+                        }
                     }
-
-                } catch (Exception e) {
-                    System.out.println("Client error at listenForGameResponse: " + e.getMessage());
-                    e.printStackTrace();
-                    exit(socket, reader, writer);
-                    return;
                 }
             }
         }).start();

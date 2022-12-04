@@ -1,7 +1,17 @@
-3
+8
 java
 a widely used object-oriented programming language and software platform that runs on billions of devices, including notebook computers, mobile devices, gaming consoles, medical devices and many others
 backend
 parts of a computer application or a programs code that allow it to operate and that cannot be accessed by a user
 spring
 an open-source framework for building enterprise Java applications
+javascript
+the most popular programming language used in web application development
+golang
+a language developed by Google
+frontend
+part of an application that users interact with
+async
+a keyword in JavaScript that turn a function into a promise
+html
+a hyper text language used for websites

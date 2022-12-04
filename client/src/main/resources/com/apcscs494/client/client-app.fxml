@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
@@ -30,4 +31,13 @@
          <Label fx:id="serverResponseMessageLabel" text="(response message)" />
       </children>
    </AnchorPane>
+   <ScrollPane layoutX="366.0" layoutY="65.0">
+      <content>
+         <VBox fx:id="scoreboardVBox" prefHeight="185.0" prefWidth="188.0">
+            <children>
+               <TableView fx:id="scoreboardTableView" prefHeight="200.0" prefWidth="200.0" />
+            </children>
+         </VBox>
+      </content>
+   </ScrollPane>
 </AnchorPane>

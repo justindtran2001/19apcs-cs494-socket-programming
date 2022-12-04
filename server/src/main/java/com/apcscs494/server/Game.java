@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Random;
 
 import com.apcscs494.server.constants.GameState;
 
@@ -29,7 +30,7 @@ class Game {
     public GamePlayerList playerList = new GamePlayerList();
     public Long nextAvailableID = 0L;
 
-    public ArrayList<Question> questionList = new ArrayList<>();
+    public final ArrayList<Question> questionList = new ArrayList<>();
     public Question currentQuestion;
 
     public Long winnerId = -1L;
@@ -54,8 +55,6 @@ class Game {
                 System.out.println("Hint: " + hint);
             }
 
-            currentQuestion = this.getNewQuestion();
-
             System.out.println();
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,12 +63,31 @@ class Game {
     }
 
     private Question getNewQuestion() {
-        Question q = questionList.get((int) Math.random() * questionList.size());
+        boolean hasUnusedQuestion = false;
+        for (Question q : questionList) {
+            if (!q.used) {
+                hasUnusedQuestion = true;
+                break;
+            }
+        }
+        if (!hasUnusedQuestion) {
+            System.out.println("Out of questions");
+            return null;
+        }
+        try {
+            Question q = questionList.get(new Random().nextInt(questionList.size()));
 
-        if (q.used)
-            return getNewQuestion();
+            if (q.used)
+                return getNewQuestion();
 
-        return q;
+            q.used = true;
+            return q;
+        }
+        catch (Exception e) {
+            System.out.println("Error at getNewQuestion: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public String getCurrentKeyWordState() {

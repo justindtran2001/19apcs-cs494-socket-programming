@@ -1,18 +1,17 @@
 package com.apcscs494.client;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.text.Text;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class ClientAppController implements Initializable {
@@ -28,8 +27,10 @@ public class ClientAppController implements Initializable {
     Button submitButton;
     @FXML
     Label serverResponseMessageLabel;
-
-    // TODO: Text for response detail message
+    @FXML
+    VBox scoreboardVBox;
+    @FXML
+    TableView<GamePlayerScore> scoreboardTableView;
 
     static State currentState = State.WAITING;
 
@@ -44,37 +45,34 @@ public class ClientAppController implements Initializable {
             System.out.println("Error creating Client.");
         }
 
-        // Listening from server
-//        client.receiveResponseFromServer(responseLabel);
+        TableColumn<GamePlayerScore, Long> idCol = new TableColumn<>("ID");
+        idCol.setMinWidth(100);
+        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        TableColumn<GamePlayerScore, Long> usernameCol = new TableColumn<>("Username");
+        usernameCol.setMinWidth(100);
+        usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
+        TableColumn<GamePlayerScore, Long> scoreCol = new TableColumn<>("Score");
+        scoreCol.setMinWidth(100);
+        scoreCol.setCellValueFactory(new PropertyValueFactory<>("score"));
 
+        scoreboardTableView.getColumns().addAll(idCol, usernameCol, scoreCol);
 
         // Set event handlers from UI elements
         guessCharTextField.setDisable(true);
-        guessCharTextField.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode().equals(KeyCode.ENTER)) {
-                    sendAnswerToServer();
-                }
-            }
-        });
-        guessKeywordTextField.setDisable(true);
-        guessKeywordTextField.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode().equals(KeyCode.ENTER)) {
-                    sendAnswerToServer();
-                }
-            }
-        });
-        submitButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
+        guessCharTextField.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode().equals(KeyCode.ENTER)) {
                 sendAnswerToServer();
             }
         });
+        guessKeywordTextField.setDisable(true);
+        guessKeywordTextField.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode().equals(KeyCode.ENTER)) {
+                sendAnswerToServer();
+            }
+        });
+        submitButton.setOnAction(event -> sendAnswerToServer());
 
-        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField, serverResponseMessageLabel);
+        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField, serverResponseMessageLabel, scoreboardTableView);
     }
 
     public void sendAnswerToServer() {
@@ -108,15 +106,11 @@ public class ClientAppController implements Initializable {
     }
 
     public static void setKeyword(String keyword, Label keywordLabel) {
-        Platform.runLater(() -> {
-            keywordLabel.setText("Keyword: " + keyword);
-        });
+        Platform.runLater(() -> keywordLabel.setText("Keyword: " + keyword));
     }
 
     public static void setHint(String hint, Label hintLabel) {
-        Platform.runLater(() -> {
-            hintLabel.setText("Hint: " + hint);
-        });
+        Platform.runLater(() -> hintLabel.setText("Hint: " + hint));
     }
 
     public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField) {
@@ -127,11 +121,25 @@ public class ClientAppController implements Initializable {
         });
     }
 
-    public static void setLostTurn(TextField guessCharTextField, TextField guessKeywordTextField) {
+    public static void disableTextFields(TextField guessCharTextField, TextField guessKeywordTextField) {
+        if (currentState == State.WAITING) return;
+
         currentState = State.WAITING;
         Platform.runLater(() -> {
             guessCharTextField.setDisable(true);
             guessKeywordTextField.setDisable(true);
+        });
+    }
+
+    public static void setServerResponseMessage(String scoreboard, Label serverResponseMessageLabel) {
+        Platform.runLater(() -> serverResponseMessageLabel.setText(scoreboard));
+    }
+
+    public static void setScoreboard(ArrayList<GamePlayerScore> gamePlayerData, TableView<GamePlayerScore> scoreboardTableView) {
+        Platform.runLater(() -> {
+            final ObservableList<GamePlayerScore> data = FXCollections.observableArrayList(gamePlayerData);
+
+            scoreboardTableView.setItems(data);
         });
     }
 }

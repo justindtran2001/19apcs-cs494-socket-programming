@@ -45,6 +45,7 @@ public class ClientWaitingRoomController implements Initializable {
                     );
                     Stage stage = (Stage) rootPane.getScene().getWindow();
                     stage.setScene(scene);
+                    stage.setResizable(false);
                     stage.show();
                 } catch (IOException e) {
                     System.out.println("Error at waiting room: " + e.getMessage());

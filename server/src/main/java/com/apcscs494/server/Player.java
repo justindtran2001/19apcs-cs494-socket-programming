@@ -16,7 +16,6 @@ import com.apcscs494.server.constants.Response;
 class Player implements Runnable {
 
     static HashMap<Long, Player> players = new HashMap<>();
-    // private static Player admin = null;
     static final Game game;
 
     private Socket socket = null;

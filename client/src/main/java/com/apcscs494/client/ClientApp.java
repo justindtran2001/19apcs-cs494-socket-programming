@@ -16,6 +16,7 @@ public class ClientApp extends Application {
 
             Scene scene = new Scene(fxmlLoader.load());
             stage.setTitle("The Magical Wheel (client)");
+            stage.setResizable(false);
             stage.setScene(scene);
             stage.show();
         } catch (Exception exception) {
