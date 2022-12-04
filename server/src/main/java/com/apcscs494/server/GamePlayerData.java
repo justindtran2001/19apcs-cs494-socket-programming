@@ -16,6 +16,18 @@ public class GamePlayerData {
     this.turn = 0;
   }
 
+  public GamePlayerData(String src) {
+    try {
+      String[] arr = src.split(",");
+      this.id = Long.parseLong(arr[0]);
+      this.username = arr[1];
+      this.point = Integer.parseInt(arr[2]);
+      this.turn = Integer.parseInt(arr[3]);
+      this.isKeyWordWinner = Boolean.parseBoolean(arr[4]);
+    } catch (Exception e) {
+    }
+  }
+
   public void AddPoint(Integer point) {
     this.point += point;
   }
@@ -28,8 +40,11 @@ public class GamePlayerData {
     this.isKeyWordWinner = true;
   }
 
-
   public String toString() {
-    return this.id.toString() + "," + this.username + "," + this.point.toString();
+    String isWinner = "false";
+    if (this.isKeyWordWinner) {
+      isWinner = "true";
+    }
+    return String.format("%d,%s,%d,%d,%s", id, username, point, turn, isWinner);
   }
 }

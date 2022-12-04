@@ -10,12 +10,23 @@ public class Utility {
 
     public static String convertResultsToString(ArrayList<GamePlayerData> results) {
         // TODO: Fix this
-        return gson.toJson(results);
+        String str = "";
+        for (GamePlayerData data : results) {
+            str += String.format("%s##", data.toString());
+        }
+
+        return str;
     }
 
     public static ArrayList<GamePlayerData> convertStringToResults(String results) {
+        String[] arr = results.split("##");
+        ArrayList<GamePlayerData> resultArr = new ArrayList<>();
 
-        return gson.fromJson(results, ArrayList.class);
+        for (String s : arr) {
+            resultArr.add(new GamePlayerData(s));
+        }
+
+        return resultArr;
     }
 
     public static boolean hasEnoughPlayers(HashMap<Long, Player> players) {

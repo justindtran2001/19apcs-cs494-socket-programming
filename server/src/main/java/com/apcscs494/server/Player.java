@@ -16,7 +16,7 @@ import com.apcscs494.server.constants.Response;
 class Player implements Runnable {
 
     static HashMap<Long, Player> players = new HashMap<>();
-    //    private static Player admin = null;
+    // private static Player admin = null;
     static final Game game;
 
     private Socket socket = null;
@@ -83,18 +83,8 @@ class Player implements Runnable {
 
     private void restartGameHandler() {
         game.restart();
-        players.forEach((id, player) -> {
-            try {
-                player.writer.write(
-                        Player.game.getCurrentKeyWordState() + "-" +
-                                Player.game.getCurrentQuestion().getHint() + "," + Response.CURRENT_KEYWORD);
-                player.writer.newLine();
-                player.writer.flush();
-            } catch (Exception e) {
-                System.out.println("Handler exception at broadcast: " + e.getMessage());
-            }
-        });
-
+        broadcastAll(game.getCurrentKeyWordState() + "-" + game.getCurrentQuestion().getHint(),
+                Response.CURRENT_KEYWORD);
         broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
     }
 
@@ -103,7 +93,8 @@ class Player implements Runnable {
             return;
         }
 
-        if (message == null) return;
+        if (message == null)
+            return;
 
         Game.RESPONSE code = game.process(message);
 
@@ -139,7 +130,7 @@ class Player implements Runnable {
                 player.writer.flush();
                 if (code == Response.OUT_GAME) {
                     players.remove(id);
-//                    player.exit();
+                    // player.exit();
                 }
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());
