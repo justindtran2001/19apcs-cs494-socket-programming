@@ -1,7 +1,6 @@
 package com.apcscs494.client;
 
 import javafx.application.Platform;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -54,7 +53,7 @@ public class ClientRegisterController implements Initializable {
             String username = usernameTextField.getText();
             if (username.isEmpty()) return;
 
-            client.sendToServer(username);
+            client.registerPlayerByUsername(username);
 
             usernameTextField.clear();
         } catch (Exception e) {
