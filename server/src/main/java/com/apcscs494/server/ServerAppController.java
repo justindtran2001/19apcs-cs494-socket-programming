@@ -23,7 +23,7 @@ public class ServerAppController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            server = new Server(new ServerSocket(8386, 10));
+            server = new Server(new ServerSocket(1234, 10));
         } catch (IOException e) {
             System.out.println("Error creating a server");
             e.printStackTrace();
@@ -61,6 +61,7 @@ public class ServerAppController implements Initializable {
     private void startNewGame() {
         Player.game.restart();
         server.broadcastAllToStartGame();
+        server.sendScoreboard();
         server.sendQuestion();
         server.chooseNextPlayer();
     }

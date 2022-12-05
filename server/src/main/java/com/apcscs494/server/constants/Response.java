@@ -7,4 +7,6 @@ public class Response {
     public static final String END_GAME = "END_GAME";
     public static final String OUT_GAME = "OUT_GAME";
     public static final String CURRENT_KEYWORD = "CURRENT_KEYWORD";
+    public static final String RESULTS = "RESULTS";
+
 }

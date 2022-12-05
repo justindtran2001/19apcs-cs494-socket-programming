@@ -1,6 +1,7 @@
 package com.apcscs494.server;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 public class GamePlayerList {
   // Represents the node of list.
@@ -21,6 +22,31 @@ public class GamePlayerList {
       tail.next = newPlayer;
       tail = newPlayer;
       tail.next = head;
+    }
+  }
+
+  public void Remove(Long id, String username) {
+    if (head == null) return;
+    if (head.id == id && head.username == username) {
+      if (head == tail) {
+        head = null;
+        tail = null;
+        current = null;
+      } else {
+        if (current == head) current = current.next;
+        head = head.next;
+      }
+    } else if (head.next == null) {
+      return;
+    } else {
+      GamePlayerData cur = head;
+      do {
+        if (cur.next.id == id && cur.next.username == username) {
+          cur.next = cur.next.next;
+          break;
+        }
+        cur = cur.next;
+      } while (cur != head);
     }
   }
 
@@ -61,6 +87,18 @@ public class GamePlayerList {
 
     }
     return false;
+  }
+
+  public boolean IsAllDisqualified(Set<Long> set) {
+    GamePlayerData cur = head;
+    if (head != null) {
+      do {
+        if (!set.contains(cur.id))
+          return false;
+        cur = cur.next;
+      } while (cur != head);
+    }
+    return true;
   }
 
   public ArrayList<GamePlayerData> ToList() {

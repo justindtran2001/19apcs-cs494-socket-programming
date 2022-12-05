@@ -27,7 +27,7 @@ public class Client {
     public static synchronized Client getInstance() throws IOException {
         try {
             if (instance == null) {
-                instance = new Client(new Socket("localhost", 8386));
+                instance = new Client(new Socket("localhost", 1234));
             }
             return instance;
         } catch (IOException e) {
@@ -62,6 +62,7 @@ public class Client {
 
     public void sendToServer(String message) throws IOException {
         try {
+            System.out.println("sendToServer(): " + message);
             writer.write(message);
             writer.newLine();
             writer.flush();
@@ -78,16 +79,19 @@ public class Client {
         this.username = username;
     }
 
-    public void listenForRegistrationConfirm(Text responseText) {
+    public void listenForRegistrationConfirm(TextField usernameTextField, Text responseText) {
         new Thread(() -> {
             System.out.println("Waiting for registration...");
-            while (socket.isConnected()) {
+            if (socket.isConnected()) {
                 try {
                     String receivedResponse = reader.readLine();
                     System.out.println("Response from server: " + receivedResponse);
 
-                    ClientRegisterController.handleResponse(receivedResponse, responseText);
-                    break;
+                    if (receivedResponse.contains(ResponseCode.SUCCESS)) {
+                        ClientRegisterController.switchToWaitingRoom(responseText);
+                    } else if (receivedResponse.contains(ResponseCode.FAILED)) {
+                        ClientRegisterController.rejectRegistration("Username already taken. Use another name", usernameTextField, responseText);
+                    }
                 } catch (Exception e) {
                     System.out.println("Client error at listenForRegistrationConfirm: " + e.getMessage());
                     e.printStackTrace();
@@ -104,8 +108,8 @@ public class Client {
                 try {
                     String response = reader.readLine();
                     System.out.println("Response from server: " + response);
-                    if (response.contains("START")) {
-                        ClientWaitingRoomController.handleResponse(response, rootPane);
+                    if (response.contains(ResponseCode.START_GAME)) {
+                        ClientWaitingRoomController.startGame(rootPane);
                         break;
                     }
                 } catch (Exception e) {
@@ -184,17 +188,48 @@ public class Client {
                                             if (Objects.equals(username, aPlayerData.username))
                                                 displayMessage.append("CONGRATULATION! YOU'RE THE WINNER!\n");
                                             else
-                                                displayMessage.append("Player ").append(aPlayerData.username).append(" is the winner.");
+                                                displayMessage.append("Player ").append(aPlayerData.username).append(" is the winner.\n");
                                         }
                                     }
+                                    gamePlayerData.sort((o1, o2) -> o2.getScore() - o1.getScore());
+                                    for (int i = 0; i < gamePlayerData.size(); ++i) {
+                                        gamePlayerData.get(i).setRank(i + 1);
+                                    }
+
+                                    displayMessage.append("Wait 10 seconds for the next game.\n");
+
                                     ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
-//                                String scoreboard = playerInfoCharSeq.toString().replace("##", "\n");
                                     ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageLabel);
+                                    ClientAppController.disableTextFields(guessCharTextField, guessKeywordTextField);
                                     TimeUnit.SECONDS.sleep(10); // wait 10 seconds before starting new game
+                                    ClientAppController.setServerResponseMessage("", serverResponseMessageLabel);
+                                }
+                                case ResponseCode.RESULTS -> {
+                                    StringBuilder playerInfoCharSeq = new StringBuilder(resp[0]);
+                                    for (int i = 1; i < resp.length - 1; ++i)
+                                        playerInfoCharSeq.append(",").append(resp[i]);
+                                    String[] playerInfoStringArr = playerInfoCharSeq.toString().split("##");
+                                    ArrayList<GamePlayerScore> gamePlayerData = new ArrayList<>();
+                                    for (String playerInfoString : playerInfoStringArr) {
+                                        String[] info = playerInfoString.split(",");
+                                        if (info.length != 5)
+                                            throw new Exception("Invalid player info format");
+                                        GamePlayerScore aPlayerData = new GamePlayerScore(
+                                                Long.parseLong(info[0]), // ID
+                                                info[1], // Username
+                                                Integer.parseInt(info[2]) // Score
+                                        );
+                                        gamePlayerData.add(aPlayerData);
+                                    }
+                                    gamePlayerData.sort((o1, o2) -> o2.getScore() - o1.getScore());
+                                    for (int i = 0; i < gamePlayerData.size(); ++i) {
+                                        gamePlayerData.get(i).setRank(i + 1);
+                                    }
+                                    ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
+                                    continue;
                                 }
                                 case ResponseCode.OUT_GAME -> {
                                     exit(socket, reader, writer);
-                                    // TODO: Exit application
                                     Platform.exit();
                                     return;
                                 }

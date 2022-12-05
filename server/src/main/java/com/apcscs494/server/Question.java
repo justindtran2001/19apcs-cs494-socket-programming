@@ -25,7 +25,7 @@ public class Question {
     }
 
     public boolean guessACharacter(Character guessChar) {
-        if (!this.keyword.contains(guessChar.toString()))
+        if (!this.keyword.contains(guessChar.toString()) || guessedCharList.contains(guessChar))
             return false;
 
         this.guessedCharList.add(guessChar);

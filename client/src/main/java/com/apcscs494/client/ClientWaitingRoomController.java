@@ -1,6 +1,5 @@
 package com.apcscs494.client;
 
-import com.apcscs494.client.constants.ResponseCode;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,26 +31,22 @@ public class ClientWaitingRoomController implements Initializable {
         client.waitForGameStart(rootPane);
     }
 
-    public static void handleResponse(String receivedResponse, Pane rootPane) {
+    public static void startGame(Pane rootPane) {
         Platform.runLater(() -> {
-            String[] resp = receivedResponse.split(",");
-            if (resp[1].equals(ResponseCode.START_GAME)) {
-                System.out.println(resp[0]);
-                try {
-                    Scene scene = new Scene(
-                            FXMLLoader.load(
-                                    Objects.requireNonNull(ClientApp.class.getResource("client-app.fxml"))
-                            )
-                    );
-                    Stage stage = (Stage) rootPane.getScene().getWindow();
-                    stage.setScene(scene);
-                    stage.setResizable(false);
-                    stage.show();
-                } catch (IOException e) {
-                    System.out.println("Error at waiting room: " + e.getMessage());
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
+            try {
+                Scene scene = new Scene(
+                        FXMLLoader.load(
+                                Objects.requireNonNull(ClientApp.class.getResource("client-app.fxml"))
+                        )
+                );
+                Stage stage = (Stage) rootPane.getScene().getWindow();
+                stage.setScene(scene);
+                stage.setResizable(false);
+                stage.show();
+            } catch (IOException e) {
+                System.out.println("Error at waiting room: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         });
     }

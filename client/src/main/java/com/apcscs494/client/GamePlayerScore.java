@@ -1,6 +1,7 @@
 package com.apcscs494.client;
 
 public class GamePlayerScore {
+    Integer rank;
     Long id;
     String username;
     Integer score;
@@ -8,10 +9,25 @@ public class GamePlayerScore {
     public GamePlayerScore() {
     }
 
+    public GamePlayerScore(Integer rank, Long id, String username, Integer score) {
+        this.rank = rank;
+        this.id = id;
+        this.username = username;
+        this.score = score;
+    }
+
     public GamePlayerScore(Long id, String username, Integer score) {
         this.id = id;
         this.username = username;
         this.score = score;
+    }
+
+    public Integer getRank() {
+        return rank;
+    }
+
+    public void setRank(Integer rank) {
+        this.rank = rank;
     }
 
     public Long getId() {

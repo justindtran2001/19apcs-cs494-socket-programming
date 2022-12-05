@@ -26,6 +26,7 @@ public class ClientRegisterController implements Initializable {
 
     Client client;
 
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
@@ -44,7 +45,7 @@ public class ClientRegisterController implements Initializable {
         registerButton.setOnAction(event -> {
             registerUsername();
 
-            client.listenForRegistrationConfirm(serverRespText);
+            client.listenForRegistrationConfirm(usernameTextField, serverRespText);
         });
     }
 
@@ -62,26 +63,30 @@ public class ClientRegisterController implements Initializable {
         }
     }
 
-    public static void handleResponse(String receivedResponse, Text responseText) {
+    public static void switchToWaitingRoom(Text responseText) {
         Platform.runLater(() -> {
-            responseText.setText(receivedResponse);
-            if (receivedResponse.contains("SUCCESS")) {
-                try {
-                    Scene scene = new Scene(
-                            FXMLLoader.load(
-                                    ClientApp.class.getResource("client-waiting-room.fxml")
-                            )
-                    );
-                    Stage stage = (Stage) responseText.getScene().getWindow();
-                    stage.setScene(scene);
-                    stage.setResizable(false);
-                    stage.show();
-                } catch (IOException e) {
-                    System.out.println("Error at clientRegisterController: " + e.getMessage());
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
+            try {
+                Scene scene = new Scene(
+                        FXMLLoader.load(
+                                ClientApp.class.getResource("client-waiting-room.fxml")
+                        )
+                );
+                Stage stage = (Stage) responseText.getScene().getWindow();
+                stage.setScene(scene);
+                stage.setResizable(false);
+                stage.show();
+            } catch (IOException e) {
+                System.out.println("Error at clientRegisterController: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException(e);
             }
+        });
+    }
+
+    public static void rejectRegistration(String s, TextField usernameTextField, Text responseText) {
+        Platform.runLater(() -> {
+            responseText.setText(s);
+            usernameTextField.clear();
         });
     }
 }

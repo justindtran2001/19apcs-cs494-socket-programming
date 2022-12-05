@@ -1,12 +1,14 @@
 package com.apcscs494.server;
 
+import com.apcscs494.server.constants.GameState;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
-
-import com.apcscs494.server.constants.GameState;
+import java.util.Set;
 
 /* message structure 
 // CHARACTER,KEYWORD
@@ -28,9 +30,11 @@ class Game {
     public GameState state;
 
     public GamePlayerList playerList = new GamePlayerList();
+    public Set<Long> disqualified = new HashSet<Long>();
     public Long nextAvailableID = 0L;
 
     public final ArrayList<Question> questionList = new ArrayList<>();
+    
     public Question currentQuestion;
 
     public Long winnerId = -1L;
@@ -63,6 +67,7 @@ class Game {
     }
 
     private Question getNewQuestion() {
+        System.out.println("getNewQuestion() called");
         boolean hasUnusedQuestion = false;
         for (Question q : questionList) {
             if (!q.used) {
@@ -111,6 +116,7 @@ class Game {
         state = GameState.RUNNING;
         winnerId = -1L;
         currentQuestion = this.getNewQuestion();
+        disqualified.clear();
         playerList.Reset();
     }
 
@@ -124,8 +130,8 @@ class Game {
 
     public ArrayList<GamePlayerData> getResults() {
         ArrayList<GamePlayerData> results = playerList.ToList();
-        if (winnerId == -1)
-            return null;
+//        if (winnerId == -1)
+//            return null;
 //        this.restart();
         return results;
     }
@@ -134,9 +140,19 @@ class Game {
         return playerList.HasForceEndCondition();
     }
 
+    public boolean isDisqualified(Long id) {
+        return disqualified.contains(id);
+    }
+
     public RESPONSE process(String message) {
-        total_turn += 1;
+        if (this.forceEndGame()) {
+            return RESPONSE.END;
+        }
+
         GamePlayerData playerData = playerList.GetCurrent();
+
+        total_turn += 1;
+
         if (message.equals("(na),(na)")) {
             playerData.AddTurn();
             playerList.MoveNext();
@@ -145,18 +161,23 @@ class Game {
 
         String[] answer = message.split(",");
 
-        if (this.forceEndGame()) {
-            return RESPONSE.END;
-        }
-
         // "(string), (string)"
-        if (answer.length > 1)
-            if (total_turn > 2 && currentQuestion.guessTheKeyword(answer[1])) {
+        if (answer.length > 1 && total_turn > 2) {
+            if (currentQuestion.guessTheKeyword(answer[1])) {
                 playerData.AddPoint(5);
                 playerData.SetKeyWordWinner();
                 winnerId = playerData.id;
                 return RESPONSE.END;
+            } else {
+                disqualified.add(playerData.id);
+                if (playerList.IsAllDisqualified(disqualified)) {
+                    return RESPONSE.END;
+                }
+                playerData.AddTurn();
+                playerList.MoveNext();
+                return RESPONSE.NEXT_PLAYER;
             }
+        }
 
         if (currentQuestion.guessACharacter(answer[0].charAt(0))) {
             playerData.AddPoint(1);
@@ -168,7 +189,10 @@ class Game {
         }
     }
 
-    public Long getNextPlayerId() {
+    public Long getNextPlayerId(Boolean move) {
+        if (move) 
+            playerList.MoveNext();
+        
         return playerList.GetCurrent().id;
     }
 

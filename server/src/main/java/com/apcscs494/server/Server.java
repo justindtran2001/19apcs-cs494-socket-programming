@@ -9,12 +9,11 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 class Server {
-    public static final int PORT = 8386;
+    public static final int PORT = 1234;
     public static final int REGISTER = 0;
     public static final int ANSWER = 1;
     public static final int MAX_PLAYER = 10;
     public static final int MIN_PLAYER = 2;
-    public static final String ADMIN_PHRASE = "admin-thisisadmin";
     public static final String CAN_START = "CAN_START";
     public static final String CAN_NOT_START = "CAN_NOT_START";
 
@@ -22,6 +21,8 @@ class Server {
     private Socket socket = null;
     private BufferedWriter writer = null;
     private BufferedReader reader = null;
+
+    int numOfPlayers = 0;
 
 
     private static final ReentrantLock mutex = new ReentrantLock();
@@ -74,14 +75,13 @@ class Server {
     public void acceptingPlayers() throws IOException {
         new Thread(() -> {
             try {
-                int i = 0;
                 while (!serverSocket.isClosed()) {
-                    if (i < MAX_PLAYER) {
+                    if (numOfPlayers < MAX_PLAYER) {
                         new Thread(new Player(serverSocket.accept())).start();
-                        System.out.println("Player " + i + " joined");
+                        System.out.println("Player " + numOfPlayers + " joined");
                         try {
                             mutex.lock();
-                            i = i + 1;
+                            numOfPlayers = numOfPlayers + 1;
                             mutex.unlock();
                         } catch (Exception e) {
                             System.out.println("Error at counting players: " + e.getMessage());
@@ -130,6 +130,14 @@ class Server {
                 player.writer.flush();
 
                 Player.players.remove(id);
+                try {
+                    mutex.lock();
+                    numOfPlayers = numOfPlayers - 1;
+                    mutex.unlock();
+                } catch (Exception e) {
+                    System.out.println("Error at removing players: " + e.getMessage());
+                    throw e;
+                }
                 player.exit();
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());
@@ -139,7 +147,7 @@ class Server {
     }
 
     void notifyNextPlayer() {
-        Long nextPlayerId = Player.game.getNextPlayerId();
+        Long nextPlayerId = Player.game.getNextPlayerId(false);
         try {
             if (Player.players.containsKey(nextPlayerId)) {
                 Player player = Player.players.get(nextPlayerId);
@@ -181,7 +189,7 @@ class Server {
 
     public void chooseNextPlayer() {
         try {
-            Long id = Player.game.getNextPlayerId();
+            Long id = Player.game.getNextPlayerId(false);
             if (Player.players.containsKey(id)) {
                 Player player = Player.players.get(id);
                 player.writer.write("" + "," + Response.YOUR_TURN);
@@ -192,5 +200,17 @@ class Server {
             System.out.println("Handler exception at broadcastT: " + e.getMessage());
             exit();
         }
+    }
+
+    public void sendScoreboard() {
+        Player.players.forEach((id, player) -> {
+            try {
+                player.writer.write(Utility.convertResultsToString(Player.game.getResults()) + "," + Response.RESULTS);
+                player.writer.newLine();
+                player.writer.flush();
+            } catch (Exception e) {
+                System.out.println("Handler exception at broadcast: " + e.getMessage());
+            }
+        });
     }
 }

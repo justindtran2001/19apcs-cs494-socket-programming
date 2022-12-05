@@ -1,28 +1,25 @@
 package com.apcscs494.server;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import com.apcscs494.server.constants.GameState;
+import com.apcscs494.server.constants.Response;
+
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.apcscs494.server.constants.GameState;
-import com.apcscs494.server.constants.Response;
 
 // A handler for a player/client
 class Player implements Runnable {
 
     static HashMap<Long, Player> players = new HashMap<>();
+    static ArrayList<Player> pendingPlayers = new ArrayList<>();
     static final Game game;
 
-    private Socket socket = null;
-    BufferedWriter writer = null;
-    private BufferedReader reader = null;
-    private String username = null;
-    private Long id = null;
+    public Socket socket = null;
+    public BufferedWriter writer = null;
+    public BufferedReader reader = null;
+    public String username = null;
+    public Long id = null;
 
     static {
         try {
@@ -37,24 +34,10 @@ class Player implements Runnable {
             this.socket = socket;
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.username = null;
 
-            // When a user joined, read the username first
-            this.username = reader.readLine();
+            registerHandler();
 
-            if (players.size() < Server.MAX_PLAYER) {
-                Long register_id = game.register(this.username);
-                this.id = register_id;
-                players.put(register_id, this);
-
-                writer.write("SUCCESS");
-                writer.newLine();
-                writer.flush();
-            } else {
-                writer.write("ROOM IS FULL");
-                writer.newLine();
-                writer.flush();
-                exit();
-            }
         } catch (Exception e) {
             System.out.println("Client error at init: " + e.getMessage());
             e.printStackTrace();
@@ -71,7 +54,9 @@ class Player implements Runnable {
             try {
                 // receives message from client
                 message = reader.readLine();
-                ClientHandler(message);
+                if (this.username != null)
+                    ClientHandler(message);
+
             } catch (IOException e) {
                 this.exit();
                 break;
@@ -80,11 +65,55 @@ class Player implements Runnable {
 
     }
 
+    private void registerHandler() throws IOException {
+        String message;
+
+        while (this.socket.isConnected()) {
+            try {
+                message = reader.readLine();
+                if (!Utility.usedName(message, players)) {
+                    this.username = message;
+                    writer.write("SUCCESS");
+                    writer.newLine();
+                    writer.flush();
+                    break;
+                } else {
+                    writer.write("FAILED");
+                    writer.newLine();
+                    writer.flush();
+                }
+            } catch (IOException e) {
+                this.exit();
+                break;
+            }
+        }
+
+        if (players.size() < Server.MAX_PLAYER) {
+            if (game.getState() == GameState.RUNNING) {
+                pendingPlayers.add(this);
+            } else {
+                Long register_id = game.register(this.username);
+                this.id = register_id;
+                players.put(register_id, this);
+            }
+
+        }
+    }
+
     private void restartGameHandler() {
+        System.out.println("restartGameHandler() called");
         game.restart();
+
+        for (Player p : pendingPlayers) {
+            Long register_id = game.register(p.username);
+            p.id = register_id;
+            players.put(register_id, p);
+            pendingPlayers.remove(p);
+        }
+
         broadcastAll(game.getCurrentKeyWordState() + "-" + game.getCurrentQuestion().getHint(),
                 Response.CURRENT_KEYWORD);
-        broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
+        broadcastTo(game.getNextPlayerId(false), "", Response.YOUR_TURN);
     }
 
     private void ClientHandler(String message) {
@@ -104,21 +133,21 @@ class Player implements Runnable {
         } else if (code == Game.RESPONSE.NEXT_PLAYER) {
             // wrong answer - lost turn;
             broadcastTo(id, "", Response.LOST_TURN);
-            broadcastTo(game.getNextPlayerId(), "", Response.YOUR_TURN);
-        } else {
-            // Game is over
-            ArrayList<GamePlayerData> results = game.getResults();
-            if (results != null)
-                broadcastAll(Utility.convertResultsToString(results), Response.END_GAME);
-            else
-                broadcastAll("No results", Response.END_GAME);
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-            } finally {
-                restartGameHandler();
+
+            Long nextPlayerId = game.getNextPlayerId(false);
+            while (game.isDisqualified(nextPlayerId)) {
+                nextPlayerId = game.getNextPlayerId(true);
             }
+            System.out.println("nextPlayerId: " + nextPlayerId);
+            broadcastTo(nextPlayerId, "", Response.YOUR_TURN);
+        } else {
+            // Game is over => Restart game
+            broadcastAll(Utility.convertResultsToString(game.getResults()), Response.END_GAME);
+            restartGameHandler();
+            return;
         }
+
+        broadcastAll(Utility.convertResultsToString(game.getResults()), Response.RESULTS);
     }
 
     public void broadcastAll(String message, String code) {
@@ -128,7 +157,9 @@ class Player implements Runnable {
                 player.writer.newLine();
                 player.writer.flush();
                 if (code == Response.OUT_GAME) {
+                    game.state = GameState.INITIAL;
                     players.remove(id);
+                    game.playerList.Remove(id, player.username);
                     // player.exit();
                 }
             } catch (Exception e) {

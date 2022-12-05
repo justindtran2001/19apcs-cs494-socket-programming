@@ -2,14 +2,11 @@ package com.apcscs494.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.google.gson.Gson;
+import java.util.Map;
 
 public class Utility {
-    static Gson gson = new Gson();
 
     public static String convertResultsToString(ArrayList<GamePlayerData> results) {
-        // TODO: Fix this
         String str = "";
         for (GamePlayerData data : results) {
             str += String.format("%s##", data.toString());
@@ -31,6 +28,15 @@ public class Utility {
 
     public static boolean hasEnoughPlayers(HashMap<Long, Player> players) {
         return players.size() >= Server.MIN_PLAYER && players.size() <= Server.MAX_PLAYER;
+    }
+
+    public static boolean usedName(String name, HashMap<Long, Player> players) {
+        for (Map.Entry<Long, Player> entry : players.entrySet()) {
+            if (entry.getValue().username.equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

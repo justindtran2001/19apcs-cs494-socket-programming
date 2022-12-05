@@ -7,4 +7,8 @@ public class ResponseCode {
     public static final String END_GAME = "END_GAME";
     public static final String OUT_GAME = "OUT_GAME";
     public static final String CURRENT_KEYWORD = "CURRENT_KEYWORD";
+    public static final String RESULTS = "RESULTS";
+    public static final String SUCCESS = "SUCCESS";
+    public static final String FAILED = "FAILED";
+    public static final String END_REGISTER = "END_REGISTER";
 }
