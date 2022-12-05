@@ -126,7 +126,7 @@ class Game {
         ArrayList<GamePlayerData> results = playerList.ToList();
         if (winnerId == -1)
             return null;
-        this.restart();
+//        this.restart();
         return results;
     }
 

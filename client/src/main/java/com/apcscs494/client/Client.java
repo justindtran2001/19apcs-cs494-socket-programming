@@ -1,6 +1,7 @@
 package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ResponseCode;
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -10,6 +11,7 @@ import javafx.scene.text.Text;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
@@ -17,6 +19,7 @@ public class Client {
     private Socket socket;
     private BufferedReader reader;
     private BufferedWriter writer;
+    String username;
 
     // Response format: "message,responseType"
     // responseType in Response.java
@@ -68,6 +71,11 @@ public class Client {
             exit(socket, reader, writer);
             throw e;
         }
+    }
+
+    public void registerPlayerByUsername(String username) throws IOException {
+        sendToServer(username);
+        this.username = username;
     }
 
     public void listenForRegistrationConfirm(Text responseText) {
@@ -159,10 +167,10 @@ public class Client {
                                     for (int i = 1; i < resp.length - 1; ++i)
                                         playerInfoCharSeq.append(",").append(resp[i]);
                                     StringBuilder displayMessage = new StringBuilder();
-                                    String[] playerInfo = playerInfoCharSeq.toString().split("##");
+                                    String[] playerInfoStringArr = playerInfoCharSeq.toString().split("##");
                                     ArrayList<GamePlayerScore> gamePlayerData = new ArrayList<>();
-                                    for (String aPlayerInfo : playerInfo) {
-                                        String[] info = aPlayerInfo.split(",");
+                                    for (String playerInfoString : playerInfoStringArr) {
+                                        String[] info = playerInfoString.split(",");
                                         if (info.length != 5)
                                             throw new Exception("Invalid player info format");
                                         GamePlayerScore aPlayerData = new GamePlayerScore(
@@ -173,7 +181,10 @@ public class Client {
                                         gamePlayerData.add(aPlayerData);
 
                                         if (Boolean.parseBoolean(info[4])) { // IsWinner
-                                            displayMessage.append("CONGRATULATION! YOU'RE THE WINNER!\n");
+                                            if (Objects.equals(username, aPlayerData.username))
+                                                displayMessage.append("CONGRATULATION! YOU'RE THE WINNER!\n");
+                                            else
+                                                displayMessage.append("Player ").append(aPlayerData.username).append(" is the winner.");
                                         }
                                     }
                                     ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
@@ -184,6 +195,7 @@ public class Client {
                                 case ResponseCode.OUT_GAME -> {
                                     exit(socket, reader, writer);
                                     // TODO: Exit application
+                                    Platform.exit();
                                     return;
                                 }
                             }

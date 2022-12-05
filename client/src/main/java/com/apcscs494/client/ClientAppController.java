@@ -31,6 +31,12 @@ public class ClientAppController implements Initializable {
     VBox scoreboardVBox;
     @FXML
     TableView<GamePlayerScore> scoreboardTableView;
+    @FXML
+    TableColumn<GamePlayerScore, Long> idCol;
+    @FXML
+    TableColumn<GamePlayerScore, String> usernameCol;
+    @FXML
+    TableColumn<GamePlayerScore, Integer> scoreCol;
 
     static State currentState = State.WAITING;
 
@@ -45,17 +51,10 @@ public class ClientAppController implements Initializable {
             System.out.println("Error creating Client.");
         }
 
-        TableColumn<GamePlayerScore, Long> idCol = new TableColumn<>("ID");
-        idCol.setMinWidth(100);
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        TableColumn<GamePlayerScore, Long> usernameCol = new TableColumn<>("Username");
-        usernameCol.setMinWidth(100);
-        usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
-        TableColumn<GamePlayerScore, Long> scoreCol = new TableColumn<>("Score");
-        scoreCol.setMinWidth(100);
-        scoreCol.setCellValueFactory(new PropertyValueFactory<>("score"));
 
-        scoreboardTableView.getColumns().addAll(idCol, usernameCol, scoreCol);
+        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
+        scoreCol.setCellValueFactory(new PropertyValueFactory<>("score"));
 
         // Set event handlers from UI elements
         guessCharTextField.setDisable(true);
