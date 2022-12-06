@@ -159,6 +159,7 @@ class Player implements Runnable {
             broadcastTo(nextPlayerId, "", Response.YOUR_TURN);
         } else {
             // Game is over => Restart game
+            broadcastAll(game.getCurrentKeyWordState(), Response.CURRENT_KEYWORD);
             broadcastAll(Utility.convertResultsToString(game.getResults()), Response.END_GAME);
             restartGameHandler();
             return;

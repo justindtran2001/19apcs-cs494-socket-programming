@@ -36,7 +36,14 @@ public class Question {
         System.out.println("Question.guessTheKeyword()");
         System.out.println(keyword);
         System.out.println(guessKeyword);
-        return this.keyword.equalsIgnoreCase(guessKeyword);
+        if (this.keyword.equalsIgnoreCase(guessKeyword)) {
+            for (char c : keyword.toCharArray()) {
+                this.guessedCharList.add(c);
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public Integer getLength() {
