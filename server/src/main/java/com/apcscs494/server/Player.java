@@ -63,7 +63,6 @@ class Player implements Runnable {
                 break;
             }
         }
-
     }
 
     private void registerHandler() {
@@ -127,7 +126,6 @@ class Player implements Runnable {
             throw new RuntimeException(e);
         }
 
-
         broadcastAll(game.getCurrentKeyWordState() + "-" + game.getCurrentQuestion().getHint(),
                 Response.CURRENT_KEYWORD);
         broadcastTo(game.getNextPlayerId(false), "", Response.YOUR_TURN);
@@ -169,17 +167,22 @@ class Player implements Runnable {
     }
 
     public void broadcastAll(String message, String code) {
+        // players is a static HashMap which will contain connecting client
         System.out.println("broadcastAll() called: " + message + ", " + code);
         players.forEach((id, player) -> {
             try {
+                // write message to client
                 player.writer.write(message + "," + code);
+                // start new line and flush for ending the message sending
                 player.writer.newLine();
                 player.writer.flush();
+
+                // the admin wants to end the game
                 if (Objects.equals(code, Response.OUT_GAME)) {
                     game.state = GameState.INITIAL;
+                    // remove the client from the game
                     players.remove(id);
                     game.playerList.Remove(id, player.username);
-                    // player.exit();
                 }
             } catch (Exception e) {
                 System.out.println("Handler exception at broadcast: " + e.getMessage());

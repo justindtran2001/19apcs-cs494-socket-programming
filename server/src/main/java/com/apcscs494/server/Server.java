@@ -25,16 +25,19 @@ class Server {
 
     int numOfPlayers = 0;
 
-
     private static final ReentrantLock mutex = new ReentrantLock();
 
     public Server(ServerSocket serverSocket) throws IOException {
         try {
+            // contructor of Server instance
             this.serverSocket = serverSocket;
-//            serverSocket.setSoTimeout(10000);
+            // creates socket for client connection
             this.socket = new Socket(HOST, PORT);
+            // Wait for the admin client to connect
             this.socket = serverSocket.accept();
+            // reader for reading message from client
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            // writer for writing message to client
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         } catch (SocketTimeoutException e) {
             System.out.println("ServerSocket.accept() is timed out");
@@ -48,13 +51,16 @@ class Server {
         }
     }
 
-
     public void exit() {
         try {
-            if (writer != null) writer.close();
-            if (reader != null) reader.close();
-            if (socket != null) socket.close();
-            if (serverSocket != null) serverSocket.close();
+            if (writer != null)
+                writer.close();
+            if (reader != null)
+                reader.close();
+            if (socket != null)
+                socket.close();
+            if (serverSocket != null)
+                serverSocket.close();
             if (!Player.players.isEmpty())
                 Player.players.forEach((id, player) -> {
                     player.exit();
@@ -67,10 +73,14 @@ class Server {
 
     private void exit(Socket socket, BufferedReader reader, BufferedWriter writer) {
         try {
-            if (writer != null) writer.close();
-            if (reader != null) reader.close();
-            if (socket != null) socket.close();
-            if (this.serverSocket != null) this.serverSocket.close();
+            if (writer != null)
+                writer.close();
+            if (reader != null)
+                reader.close();
+            if (socket != null)
+                socket.close();
+            if (this.serverSocket != null)
+                this.serverSocket.close();
             if (!Player.players.isEmpty())
                 Player.players.forEach((id, player) -> {
                     player.exit();
@@ -86,8 +96,11 @@ class Server {
             try {
                 while (!serverSocket.isClosed()) {
                     if (numOfPlayers < MAX_PLAYER) {
+
+                        // wait for client to connect
+                        // start new thread to avoid blocking call serverSocket.accept()
                         new Thread(new Player(serverSocket.accept())).start();
-//                        System.out.println("Player " + numOfPlayers + " joined");
+
                         try {
                             mutex.lock();
                             numOfPlayers = numOfPlayers + 1;

@@ -31,6 +31,7 @@ public class Client {
     public static synchronized Client getInstance() throws IOException {
         try {
             if (instance == null) {
+                // Connect to the server at localhost and defined port
                 instance = new Client(new Socket(SERVER_HOST, PORT));
             }
             return instance;
@@ -43,8 +44,11 @@ public class Client {
 
     private Client(Socket socket) throws IOException {
         try {
+            // Client constructor
             this.socket = socket;
+            // writer for writing message to server
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            // reader for reading message from server
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
             System.out.println("Client error at init: " + e.getMessage());
@@ -55,9 +59,12 @@ public class Client {
 
     private void exit(Socket socket, BufferedReader reader, BufferedWriter writer) {
         try {
-            if (writer != null) writer.close();
-            if (reader != null) reader.close();
-            if (socket != null) socket.close();
+            if (writer != null)
+                writer.close();
+            if (reader != null)
+                reader.close();
+            if (socket != null)
+                socket.close();
         } catch (IOException e) {
             System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
@@ -66,9 +73,12 @@ public class Client {
 
     public void exit() {
         try {
-            if (writer != null) writer.close();
-            if (reader != null) reader.close();
-            if (socket != null) socket.close();
+            if (writer != null)
+                writer.close();
+            if (reader != null)
+                reader.close();
+            if (socket != null)
+                socket.close();
         } catch (IOException e) {
             System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
@@ -78,7 +88,9 @@ public class Client {
     public void sendToServer(String message) throws IOException {
         try {
             System.out.println("sendToServer(): " + message);
+            // write message to writer
             writer.write(message);
+            // start new line and flush for ending the message
             writer.newLine();
             writer.flush();
         } catch (IOException e) {
@@ -105,7 +117,8 @@ public class Client {
                     if (receivedResponse.contains(ResponseCode.SUCCESS)) {
                         ClientRegisterController.switchToWaitingRoom(responseText);
                     } else if (receivedResponse.contains(ResponseCode.FAILED)) {
-                        ClientRegisterController.rejectRegistration("Username already taken", usernameTextField, responseText);
+                        ClientRegisterController.rejectRegistration("Username already taken", usernameTextField,
+                                responseText);
                     }
                 } catch (Exception e) {
                     System.out.println("Client error at listenForRegistrationConfirm: " + e.getMessage());
@@ -147,13 +160,16 @@ public class Client {
             TextFlow serverResponseMessageTextFlow,
             TableView<GamePlayerScore> scoreboardTableView,
             Text winnerUsernameText) {
+
+        // Handle response from server
         new Thread(() -> {
             System.out.println("Listening for game response...");
             while (socket.isConnected()) {
                 try {
+                    // read message from server
                     String receivedResponse = reader.readLine();
                     System.out.println("Response from game server: " + receivedResponse);
-
+                    // process the message according to the message code
                     String[] resp = receivedResponse.split(",");
                     String code = resp[resp.length - 1];
 
@@ -184,7 +200,8 @@ public class Client {
                         }
                         case ResponseCode.YOUR_TURN -> {
                             System.out.println("Setting your turn");
-                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField, serverResponseMessageTextFlow, submitButton);
+                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField,
+                                    serverResponseMessageTextFlow, submitButton);
                             continue;
                         }
                         case ResponseCode.END_GAME -> {
@@ -223,8 +240,10 @@ public class Client {
                             displayMessage.append("Wait 10 seconds for the next game.\n");
 
                             ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
-                            ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageTextFlow, winnerUsernameText);
-                            ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);
+                            ClientAppController.setServerResponseMessage(displayMessage.toString(),
+                                    serverResponseMessageTextFlow, winnerUsernameText);
+                            ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField,
+                                    submitButton);
                             ClientAppController.setWinnerUsernameText(winnerAnnouncement, winnerUsernameText);
                             TimeUnit.SECONDS.sleep(10); // wait 10 seconds before starting new game
                             ClientAppController.setServerResponseMessage("", serverResponseMessageTextFlow, null);
@@ -255,7 +274,8 @@ public class Client {
                             continue;
                         }
                         case ResponseCode.OUT_GAME -> {
-                            System.out.println(ResponseCode.OUT_GAME + " received. " + "Closing sockets and application now.");
+                            System.out.println(
+                                    ResponseCode.OUT_GAME + " received. " + "Closing sockets and application now.");
                             exit();
                             ClientAppController.closeWindow();
                             return;
@@ -263,8 +283,7 @@ public class Client {
                         case ResponseCode.LOST_TURN -> ClientAppController.setServerResponseMessage(
                                 "You have lost your turn.\nWait for another players to finish.",
                                 serverResponseMessageTextFlow,
-                                null
-                        );
+                                null);
                     }
                     ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);
                 } catch (Exception e) {
