@@ -29,6 +29,8 @@ public class ClientWaitingRoomController implements Initializable {
         }
 
         client.waitForGameStart(rootPane);
+
+        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> client.exit()));
     }
 
     public static void startGame(Pane rootPane) {

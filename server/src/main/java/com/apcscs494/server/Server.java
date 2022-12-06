@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 class Server {
+    public static final String HOST = "localhost";
     public static final int PORT = 1234;
     public static final int REGISTER = 0;
     public static final int ANSWER = 1;
@@ -31,7 +32,7 @@ class Server {
         try {
             this.serverSocket = serverSocket;
 //            serverSocket.setSoTimeout(10000);
-            this.socket = new Socket("localhost", PORT);
+            this.socket = new Socket(HOST, PORT);
             this.socket = serverSocket.accept();
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -54,6 +55,10 @@ class Server {
             if (reader != null) reader.close();
             if (socket != null) socket.close();
             if (serverSocket != null) serverSocket.close();
+            if (!Player.players.isEmpty())
+                Player.players.forEach((id, player) -> {
+                    player.exit();
+                });
         } catch (IOException e) {
             System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
@@ -66,6 +71,10 @@ class Server {
             if (reader != null) reader.close();
             if (socket != null) socket.close();
             if (this.serverSocket != null) this.serverSocket.close();
+            if (!Player.players.isEmpty())
+                Player.players.forEach((id, player) -> {
+                    player.exit();
+                });
         } catch (IOException e) {
             System.out.println("Handler exception at exit: " + e.getMessage());
             e.printStackTrace();
@@ -78,7 +87,7 @@ class Server {
                 while (!serverSocket.isClosed()) {
                     if (numOfPlayers < MAX_PLAYER) {
                         new Thread(new Player(serverSocket.accept())).start();
-                        System.out.println("Player " + numOfPlayers + " joined");
+//                        System.out.println("Player " + numOfPlayers + " joined");
                         try {
                             mutex.lock();
                             numOfPlayers = numOfPlayers + 1;
@@ -90,6 +99,7 @@ class Server {
                     }
                 }
             } catch (IOException e) {
+                System.out.println("Error at acceptingPlayers: " + e.getMessage());
                 e.printStackTrace();
                 exit(socket, reader, writer);
             }
