@@ -1,7 +1,6 @@
 package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ResponseCode;
-import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -183,7 +182,7 @@ public class Client {
                         }
                         case ResponseCode.YOUR_TURN -> {
                             System.out.println("Setting your turn");
-                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField);
+                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField, serverResponseMessageLabel);
                             continue;
                         }
                         case ResponseCode.END_GAME -> {
@@ -251,10 +250,9 @@ public class Client {
                         }
                         case ResponseCode.OUT_GAME -> {
                             System.out.println(ResponseCode.OUT_GAME + " received. " + "Closing sockets and application now.");
-//                                exit();
-//                                ClientAppController.closeWindow(rootPane);
-                            exit(socket, reader, writer);
-                            Platform.exit();
+                            exit();
+//                            Platform.exit();
+                            ClientAppController.closeWindow(rootPane);
                             return;
                         }
                     }

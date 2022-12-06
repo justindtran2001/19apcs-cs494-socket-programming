@@ -87,7 +87,7 @@ class Server {
                 while (!serverSocket.isClosed()) {
                     if (numOfPlayers < MAX_PLAYER) {
                         new Thread(new Player(serverSocket.accept())).start();
-                        System.out.println("Player " + numOfPlayers + " joined");
+//                        System.out.println("Player " + numOfPlayers + " joined");
                         try {
                             mutex.lock();
                             numOfPlayers = numOfPlayers + 1;

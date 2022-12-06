@@ -88,6 +88,8 @@ class Player implements Runnable {
             }
         }
 
+        System.out.println("Player " + username + " has joined.");
+
         if (players.size() < Server.MAX_PLAYER) {
             if (game.getState() == GameState.RUNNING) {
                 pendingPlayers.add(this);

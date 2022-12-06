@@ -45,13 +45,14 @@ public class ClientAppController implements Initializable {
     @FXML
     Label timeRemainingLabel;
 
-    Thread timerThread;
+    static Thread timerThread;
     static Integer remainingTime;
+    static int timeAllowed = 15;
     static State currentState = State.WAITING;
 
     private static final ReentrantLock mutex = new ReentrantLock();
 
-    Client client;
+    static Client client;
 
 
     @Override
@@ -93,11 +94,9 @@ public class ClientAppController implements Initializable {
                 scoreboardTableView
         );
 
-        this.setListenerForTimer();
+//        this.setListenerForTimer();
 
-//        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> {
-//            client.exit();
-//        }));
+        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> client.exit()));
     }
 
     public static void closeWindow(AnchorPane rootPane) {
@@ -160,9 +159,11 @@ public class ClientAppController implements Initializable {
             System.out.println("Submit answer: " + answer);
 
             client.sendToServer(answer);
+            timerThread.stop();
 
             guessCharTextField.clear();
             guessKeywordTextField.clear();
+            serverResponseMessageLabel.setText("");
         } catch (Exception e) {
             System.out.println("Client error at sendAnswerToServer: " + e.getMessage());
             e.printStackTrace();
@@ -177,20 +178,40 @@ public class ClientAppController implements Initializable {
         Platform.runLater(() -> hintLabel.setText("Hint: " + hint));
     }
 
-    public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField) {
+    public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField, Label serverResponseMessageLabel) {
         try {
-            mutex.lock();
             currentState = State.MY_TURN;
-            remainingTime = 20;
-            mutex.unlock();
+            remainingTime = timeAllowed;
+
+            timerThread = new Thread(() -> {
+                try {
+                    while (true) {
+                        Thread.sleep(1000);
+                        remainingTime--;
+                        System.out.println("Remaining time: " + remainingTime);
+
+                        if (remainingTime <= 0) {
+                            client.sendToServer("(na),(na)");
+                            Platform.runLater(() -> serverResponseMessageLabel.setText(""));
+                            break;
+                        }
+                    }
+                } catch (InterruptedException | IOException e) {
+                    System.out.println("Error at countdown");
+                    throw new RuntimeException(e);
+                }
+            });
+            timerThread.start();
+
+            Platform.runLater(() -> {
+                guessCharTextField.setDisable(false);
+                guessKeywordTextField.setDisable(false);
+                serverResponseMessageLabel.setText("You have " + timeAllowed + " seconds to submit one answer.");
+            });
         } catch (Exception e) {
             System.out.println("Error at set remainingTime for myTurn: " + e.getMessage());
             throw e;
         }
-        Platform.runLater(() -> {
-            guessCharTextField.setDisable(false);
-            guessKeywordTextField.setDisable(false);
-        });
     }
 
     public static void disableTextFields(TextField guessCharTextField, TextField guessKeywordTextField) {
@@ -213,8 +234,7 @@ public class ClientAppController implements Initializable {
         Platform.runLater(() -> {
             try {
                 scoreboardTableView.setItems(FXCollections.observableArrayList(gamePlayerData));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println("Error at updating scoreboard: " + e.getMessage());
                 throw e;
             }
