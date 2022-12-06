@@ -9,6 +9,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 import java.io.IOException;
 import java.net.URL;
@@ -189,10 +190,20 @@ public class ClientAppController implements Initializable {
                         Thread.sleep(1000);
                         remainingTime--;
                         System.out.println("Remaining time: " + remainingTime);
+                        Platform.runLater(() -> {
+                            serverResponseMessageLabel.setText("You have " + remainingTime + " seconds to submit one answer.");
+                            if (remainingTime <= 3)
+                                serverResponseMessageLabel.setTextFill(Color.color(1.0, 0.0, 0.0));
+                            else
+                                serverResponseMessageLabel.setTextFill(Color.color(0, 0, 0));
+                        });
 
                         if (remainingTime <= 0) {
                             client.sendToServer("(na),(na)");
-                            Platform.runLater(() -> serverResponseMessageLabel.setText(""));
+                            Platform.runLater(() -> {
+                                serverResponseMessageLabel.setTextFill(Color.color(0, 0, 0));
+                                serverResponseMessageLabel.setText("");
+                            });
                             break;
                         }
                     }
