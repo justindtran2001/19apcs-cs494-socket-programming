@@ -1,10 +1,14 @@
 package com.apcscs494.server;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,6 +17,8 @@ import java.util.ResourceBundle;
 
 
 public class ServerAppController implements Initializable {
+    @FXML
+    AnchorPane rootPane;
     @FXML
     Button startGameButton;
     @FXML
@@ -23,7 +29,7 @@ public class ServerAppController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            server = new Server(new ServerSocket(1234, 10));
+            server = new Server(new ServerSocket(Server.PORT, 10));
         } catch (IOException e) {
             System.out.println("Error creating a server");
             e.printStackTrace();
@@ -56,6 +62,12 @@ public class ServerAppController implements Initializable {
                 server.notifyEndGame();
             }
         });
+
+        Platform.runLater(() -> rootPane.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, this::closeWindowEvent));
+    }
+
+    private <T extends Event> void closeWindowEvent(T t) {
+        server.exit();
     }
 
     private void startNewGame() {

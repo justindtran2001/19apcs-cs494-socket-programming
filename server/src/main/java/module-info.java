@@ -1,5 +1,4 @@
 module com.apcscs494.server {
-    requires com.google.gson;
     requires javafx.controls;
     requires javafx.fxml;
 

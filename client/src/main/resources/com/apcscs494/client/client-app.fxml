@@ -2,18 +2,25 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="400.0" prefWidth="698.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientAppController">
+<?import javafx.scene.text.Font?>
+<AnchorPane fx:id="rootPane" prefHeight="400.0" prefWidth="698.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientAppController">
    <Button fx:id="submitButton" alignment="CENTER" layoutX="288.0" layoutY="267.0" mnemonicParsing="false" prefHeight="62.0" prefWidth="65.0" text="Submit" textAlignment="CENTER" />
    <TextField fx:id="guessCharTextField" layoutX="73.0" layoutY="267.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess a character" />
    <TextField fx:id="guessKeywordTextField" layoutX="73.0" layoutY="301.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess the keyword" />
-   <VBox layoutX="73.0" layoutY="65.0" prefHeight="185.0" prefWidth="280.0">
+   <VBox layoutX="73.0" layoutY="65.0" prefHeight="185.0" prefWidth="280.0" spacing="5.0">
       <children>
-         <Label fx:id="keywordLabel" text="Keyword: " />
-         <ScrollPane prefHeight="200.0" prefWidth="200.0">
+         <Label fx:id="keywordLabel" text="Keyword: ">
+            <font>
+               <Font name="System Bold" size="18.0" />
+            </font></Label>
+         <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0">
            <content>
                <VBox>
                   <children>
-                     <Label fx:id="hintLabel" maxHeight="1.7976931348623157E308" maxWidth="278.0" prefWidth="278.0" text="Hint: " wrapText="true" />
+                     <Label fx:id="hintLabel" maxHeight="1.7976931348623157E308" maxWidth="278.0" prefWidth="278.0" text="Hint: " wrapText="true">
+                        <font>
+                           <Font size="14.0" />
+                        </font></Label>
                   </children>
                </VBox>
            </content>

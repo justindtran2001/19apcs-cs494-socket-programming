@@ -2,12 +2,12 @@ package com.apcscs494.client;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientAppController implements Initializable {
+    @FXML
+    AnchorPane rootPane;
     @FXML
     TextField guessCharTextField;
     @FXML
@@ -81,18 +83,34 @@ public class ClientAppController implements Initializable {
         });
         submitButton.setOnAction(event -> sendAnswerToServer());
 
-        client.listenForGameResponse(keywordLabel, hintLabel, guessCharTextField, guessKeywordTextField, serverResponseMessageLabel, scoreboardTableView);
+        client.listenForGameResponse(
+                rootPane,
+                keywordLabel,
+                hintLabel,
+                guessCharTextField,
+                guessKeywordTextField,
+                serverResponseMessageLabel,
+                scoreboardTableView
+        );
 
         this.setListenerForTimer();
+
+//        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> {
+//            client.exit();
+//        }));
+    }
+
+    public static void closeWindow(AnchorPane rootPane) {
+        Platform.exit();
     }
 
     public void setListenerForTimer() {
         timerThread = new Thread(() -> {
             try {
                 while (true) {
-                    try {
-                        mutex.lock();
-                        if (currentState == State.MY_TURN) {
+                    if (currentState == State.MY_TURN) {
+                        try {
+                            mutex.lock();
                             if (remainingTime > 0) {
                                 remainingTime--;
                                 TimeUnit.SECONDS.sleep(1);
@@ -105,14 +123,13 @@ public class ClientAppController implements Initializable {
 //                                disableTextFields(guessCharTextField, guessKeywordTextField);
                                 Platform.runLater(() -> timeRemainingLabel.setText(""));
                             }
+                            mutex.unlock();
+                        } catch (Exception e) {
+                            System.out.println("Error at countdown timer: " + e.getMessage());
+                            throw e;
                         }
-                        else {
-                            Platform.runLater(() -> timeRemainingLabel.setText(""));
-                        }
-                        mutex.unlock();
-                    } catch (Exception e) {
-                        System.out.println("Error at countdown timer: " + e.getMessage());
-                        throw e;
+                    } else {
+                        Platform.runLater(() -> timeRemainingLabel.setText(""));
                     }
                 }
             } catch (InterruptedException e) {
@@ -179,6 +196,7 @@ public class ClientAppController implements Initializable {
     public static void disableTextFields(TextField guessCharTextField, TextField guessKeywordTextField) {
         if (currentState == State.WAITING) return;
 
+        System.out.println("disableTextFields() called");
         currentState = State.WAITING;
         remainingTime = -1;
         Platform.runLater(() -> {
@@ -193,9 +211,13 @@ public class ClientAppController implements Initializable {
 
     public static void setScoreboard(ArrayList<GamePlayerScore> gamePlayerData, TableView<GamePlayerScore> scoreboardTableView) {
         Platform.runLater(() -> {
-            final ObservableList<GamePlayerScore> data = FXCollections.observableArrayList(gamePlayerData);
-
-            scoreboardTableView.setItems(data);
+            try {
+                scoreboardTableView.setItems(FXCollections.observableArrayList(gamePlayerData));
+            }
+            catch (Exception e) {
+                System.out.println("Error at updating scoreboard: " + e.getMessage());
+                throw e;
+            }
         });
     }
 
