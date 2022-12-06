@@ -145,8 +145,8 @@ public class Client {
             TextField guessKeywordTextField,
             Button submitButton,
             TextFlow serverResponseMessageTextFlow,
-            TableView<GamePlayerScore> scoreboardTableView
-    ) {
+            TableView<GamePlayerScore> scoreboardTableView,
+            Text winnerUsernameText) {
         new Thread(() -> {
             System.out.println("Listening for game response...");
             while (socket.isConnected()) {
@@ -192,8 +192,11 @@ public class Client {
                             for (int i = 1; i < resp.length - 1; ++i)
                                 playerInfoCharSeq.append(",").append(resp[i]);
                             StringBuilder displayMessage = new StringBuilder();
+                            String winnerAnnouncement = "";
+
                             String[] playerInfoStringArr = playerInfoCharSeq.toString().split("##");
                             ArrayList<GamePlayerScore> gamePlayerData = new ArrayList<>();
+
                             for (String playerInfoString : playerInfoStringArr) {
                                 String[] info = playerInfoString.split(",");
                                 if (info.length != 5)
@@ -207,9 +210,9 @@ public class Client {
 
                                 if (Boolean.parseBoolean(info[4])) { // IsWinner
                                     if (Objects.equals(username, aPlayerData.username))
-                                        displayMessage.append("CONGRATULATION! YOU'RE THE WINNER!\n");
+                                        winnerAnnouncement = "YOU'RE THE WINNER!\n";
                                     else
-                                        displayMessage.append("Player ").append(aPlayerData.username).append(" is the winner.\n");
+                                        winnerAnnouncement = aPlayerData.username + " is the winner.\n";
                                 }
                             }
                             gamePlayerData.sort((o1, o2) -> o2.getScore() - o1.getScore());
@@ -220,10 +223,11 @@ public class Client {
                             displayMessage.append("Wait 10 seconds for the next game.\n");
 
                             ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
-                            ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageTextFlow);
+                            ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageTextFlow, winnerUsernameText);
                             ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);
+                            ClientAppController.setWinnerUsernameText(winnerAnnouncement, winnerUsernameText);
                             TimeUnit.SECONDS.sleep(10); // wait 10 seconds before starting new game
-                            ClientAppController.setServerResponseMessage("", serverResponseMessageTextFlow);
+                            ClientAppController.setServerResponseMessage("", serverResponseMessageTextFlow, null);
                         }
                         case ResponseCode.RESULTS -> {
                             StringBuilder playerInfoCharSeq = new StringBuilder(resp[0]);
@@ -258,7 +262,8 @@ public class Client {
                         }
                         case ResponseCode.LOST_TURN -> ClientAppController.setServerResponseMessage(
                                 "You have lost your turn.\nWait for another players to finish.",
-                                serverResponseMessageTextFlow
+                                serverResponseMessageTextFlow,
+                                null
                         );
                     }
                     ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);

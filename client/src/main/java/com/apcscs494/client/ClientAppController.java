@@ -1,12 +1,10 @@
 package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ClientAppWindowState;
-import com.apcscs494.client.constants.TimerType;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
@@ -49,9 +47,12 @@ public class ClientAppController implements Initializable {
     TableColumn<GamePlayerScore, Integer> scoreCol;
     @FXML
     Text usernameText;
+    @FXML
+    Text winnerUsernameText;
 
     static Thread timerThread;
     static Integer remainingTime;
+    static Integer remainingTimeTillNewGame;
     static int timeAllowed = 15;
     static State currentState = State.WAITING;
 
@@ -70,6 +71,7 @@ public class ClientAppController implements Initializable {
         }
 
         usernameText.setText(client.username);
+        winnerUsernameText.setText("");
 
         rankCol.setCellValueFactory(new PropertyValueFactory<>("rank"));
         usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -97,7 +99,8 @@ public class ClientAppController implements Initializable {
                 guessKeywordTextField,
                 submitButton,
                 serverResponseMessageTextFlow,
-                scoreboardTableView
+                scoreboardTableView,
+                winnerUsernameText
         );
 
         Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> {
@@ -154,7 +157,7 @@ public class ClientAppController implements Initializable {
         try {
             currentState = State.MY_TURN;
 
-            startTimer(timeAllowed, TimerType.YOUR_TURN, serverResponseMessageTextFlow);
+            startTimerForYourTurn(timeAllowed, serverResponseMessageTextFlow);
 
             Platform.runLater(() -> {
                 guessCharTextField.setDisable(false);
@@ -180,16 +183,10 @@ public class ClientAppController implements Initializable {
         });
     }
 
-    public static void setServerResponseMessage(String message, TextFlow serverResponseMessageTextFlow) {
+    public static void setServerResponseMessage(String message, TextFlow serverResponseMessageTextFlow, Text winnerUsernameText) {
         Platform.runLater(() -> {
             if (message.contains("Wait 10 seconds")) {
-                Text winnerText = new Text(message.split("\n")[0]);
-                Text waitText = new Text(message.split("\n")[1]);
-                serverResponseMessageTextFlow.getChildren().clear();
-                Separator separator = new Separator(Orientation.HORIZONTAL);
-                separator.prefWidthProperty().set(serverResponseMessageTextFlow.getWidth());
-                serverResponseMessageTextFlow.getChildren().addAll(winnerText, waitText);
-                startTimer(10, TimerType.WAIT_FOR_NEW_GAME, serverResponseMessageTextFlow);
+                startTimerForGameRestart(serverResponseMessageTextFlow, winnerUsernameText);
             } else {
                 Text text = new Text(message);
                 text.setFont(Font.font(16.0));
@@ -199,24 +196,22 @@ public class ClientAppController implements Initializable {
         });
     }
 
-    private static void startTimer(int seconds, TimerType type, TextFlow serverResponseMessageTextFlow) {
+    private static void startTimerForYourTurn(int seconds, TextFlow serverResponseMessageTextFlow) {
         remainingTime = seconds;
         timerThread = new Thread(() -> {
             try {
                 while (true) {
                     Thread.sleep(1000);
                     remainingTime--;
-                    System.out.println("Remaining time: " + remainingTime);
                     Platform.runLater(() -> {
                         serverResponseMessageTextFlow.getChildren().clear();
+
                         Text text = new Text();
                         text.setFont(Font.font(16.0));
 
-                        if (type == TimerType.YOUR_TURN) {
-                            text.setText("You have " + remainingTime + " seconds to submit one answer.");
-                        } else if (type == TimerType.WAIT_FOR_NEW_GAME) {
-                            text.setText("A new game will be started in " + remainingTime + " seconds.");
-                        }
+                        System.out.println("Remaining time till end of turn: " + remainingTime);
+                        text.setText("You have " + remainingTime + " seconds to submit one answer.");
+
 
                         if (remainingTime <= 3)
                             text.setFill(Color.color(1.0, 0.0, 0.0));
@@ -224,8 +219,6 @@ public class ClientAppController implements Initializable {
                             text.setFill(Color.color(0, 0, 0));
                         serverResponseMessageTextFlow.getChildren().add(text);
                     });
-
-
 
                     if (remainingTime <= 0) {
                         client.sendToServer("(na),(na)");
@@ -242,6 +235,48 @@ public class ClientAppController implements Initializable {
         timerThread.start();
     }
 
+    private static void startTimerForGameRestart(TextFlow serverResponseMessageTextFlow, Text winnerUsernameText) {
+        remainingTimeTillNewGame = 10;
+        timerThread = new Thread(() -> {
+            try {
+                while (true) {
+                    Thread.sleep(1000);
+                    remainingTimeTillNewGame--;
+                    Platform.runLater(() -> {
+                        serverResponseMessageTextFlow.getChildren().clear();
+
+                        Text text = new Text();
+                        text.setFont(Font.font(16.0));
+
+                        System.out.println("Remaining time till restart game: " + remainingTimeTillNewGame);
+                        text.setText("A new game will be started in " + remainingTimeTillNewGame + " seconds.");
+
+
+                        if (remainingTimeTillNewGame < 3)
+                            winnerUsernameText.setText("");
+
+                        if (remainingTimeTillNewGame <= 3)
+                            text.setFill(Color.color(1.0, 0.0, 0.0));
+                        else
+                            text.setFill(Color.color(0, 0, 0));
+
+                        serverResponseMessageTextFlow.getChildren().add(text);
+                    });
+
+                    if (remainingTimeTillNewGame <= 0) {
+                        Platform.runLater(() -> serverResponseMessageTextFlow.getChildren().clear());
+                        break;
+                    }
+                    if (clientAppWindowState == ClientAppWindowState.CLOSED) break;
+                }
+            } catch (InterruptedException e) {
+                System.out.println("Error at countdown");
+                throw new RuntimeException(e);
+            }
+        });
+        timerThread.start();
+    }
+
     public static void setScoreboard(ArrayList<GamePlayerScore> gamePlayerData, TableView<GamePlayerScore> scoreboardTableView) {
         Platform.runLater(() -> {
             try {
@@ -251,5 +286,9 @@ public class ClientAppController implements Initializable {
                 throw e;
             }
         });
+    }
+
+    public static void setWinnerUsernameText(String winner, Text winnerUsernameText) {
+        Platform.runLater(() -> winnerUsernameText.setText(winner));
     }
 }

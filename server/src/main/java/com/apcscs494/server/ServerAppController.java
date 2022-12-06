@@ -53,6 +53,7 @@ public class ServerAppController implements Initializable {
             System.out.println("startGameButton clicked");
             if (Utility.hasEnoughPlayers(Player.players)) {
                 startNewGame();
+                responseText.setText("The game has started.");
             } else {
                 System.out.println("Not enough players!!");
                 responseText.setText("Not enough players.\n Number of players needs to be between 2 and 10. ");

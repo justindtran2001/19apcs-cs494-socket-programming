@@ -35,7 +35,7 @@
    </VBox>
    <AnchorPane layoutX="366.0" layoutY="268.0" prefHeight="62.0" prefWidth="278.0">
       <children>
-         <TextFlow fx:id="serverResponseMessageTextFlow" prefHeight="80.0" prefWidth="278.0" />
+         <TextFlow fx:id="serverResponseMessageTextFlow" prefHeight="80.0" prefWidth="294.0" />
       </children>
    </AnchorPane>
    <ScrollPane layoutX="366.0" layoutY="65.0" prefHeight="187.0" prefWidth="294.0">
@@ -70,4 +70,9 @@
          <Font name="System Bold" size="16.0" />
       </font>
    </Label>
+   <Text fx:id="winnerUsernameText" layoutX="469.0" layoutY="53.0" strokeType="OUTSIDE" strokeWidth="0.0" text="(winner)" textAlignment="RIGHT" wrappingWidth="191.0">
+      <font>
+         <Font size="14.0" />
+      </font>
+   </Text>
 </AnchorPane>
