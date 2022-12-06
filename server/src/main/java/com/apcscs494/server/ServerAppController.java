@@ -1,13 +1,12 @@
 package com.apcscs494.server;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.stage.WindowEvent;
 
 import java.io.IOException;
@@ -23,6 +22,12 @@ public class ServerAppController implements Initializable {
     Button startGameButton;
     @FXML
     Button endGameButton;
+    @FXML
+    Text responseText;
+    @FXML
+    Text numOfPlayerText;
+    @FXML
+    Button refreshButton;
 
     private Server server;
 
@@ -42,25 +47,27 @@ public class ServerAppController implements Initializable {
             throw new RuntimeException(e);
         }
 
-        startGameButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.out.println("startGameButton clicked");
-                if (Utility.hasEnoughPlayers(Player.players)) {
-                    startNewGame();
-                } else {
-                    // TODO: Alert that not enough players
-                }
+        responseText.setText("");
+
+        startGameButton.setOnAction(actionEvent -> {
+            System.out.println("startGameButton clicked");
+            if (Utility.hasEnoughPlayers(Player.players)) {
+                startNewGame();
+            } else {
+                System.out.println("Not enough players!!");
+                responseText.setText("Not enough players.\n Number of players needs to be between 2 and 10. ");
             }
         });
 
-        endGameButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.out.println("endGameButton clicked");
-                Player.game.endByAdmin();
-                server.notifyEndGame();
-            }
+        endGameButton.setOnAction(actionEvent -> {
+            System.out.println("endGameButton clicked");
+            Player.game.endByAdmin();
+            server.notifyEndGame();
+        });
+
+        refreshButton.setOnAction(actionEvent -> {
+            System.out.println("refreshButton clicked");
+            updateNumOfPlayersText();
         });
 
         Platform.runLater(() -> rootPane.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, this::closeWindowEvent));
@@ -78,5 +85,8 @@ public class ServerAppController implements Initializable {
         server.chooseNextPlayer();
     }
 
+    void updateNumOfPlayersText() {
+        Platform.runLater(() -> numOfPlayerText.setText(String.valueOf(Player.players.size())));
+    }
 
 }

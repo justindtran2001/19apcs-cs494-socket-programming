@@ -1,12 +1,13 @@
 package com.apcscs494.client;
 
 import com.apcscs494.client.constants.ResponseCode;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
 import java.io.*;
 import java.net.Socket;
@@ -104,7 +105,7 @@ public class Client {
                     if (receivedResponse.contains(ResponseCode.SUCCESS)) {
                         ClientRegisterController.switchToWaitingRoom(responseText);
                     } else if (receivedResponse.contains(ResponseCode.FAILED)) {
-                        ClientRegisterController.rejectRegistration("Username already taken. Use another name", usernameTextField, responseText);
+                        ClientRegisterController.rejectRegistration("Username already taken", usernameTextField, responseText);
                     }
                 } catch (Exception e) {
                     System.out.println("Client error at listenForRegistrationConfirm: " + e.getMessage());
@@ -130,6 +131,7 @@ public class Client {
                     System.out.println("Client error at waitForGameStart: " + e.getMessage());
                     e.printStackTrace();
                     exit(socket, reader, writer);
+                    ClientAppController.closeWindow();
                     break;
                 }
             }
@@ -137,12 +139,12 @@ public class Client {
     }
 
     public void listenForGameResponse(
-            AnchorPane rootPane,
             Label keywordLabel,
             Label hintLabel,
             TextField guessCharTextField,
             TextField guessKeywordTextField,
-            Label serverResponseMessageLabel,
+            Button submitButton,
+            TextFlow serverResponseMessageTextFlow,
             TableView<GamePlayerScore> scoreboardTableView
     ) {
         new Thread(() -> {
@@ -182,7 +184,7 @@ public class Client {
                         }
                         case ResponseCode.YOUR_TURN -> {
                             System.out.println("Setting your turn");
-                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField, serverResponseMessageLabel);
+                            ClientAppController.setYourTurn(guessCharTextField, guessKeywordTextField, serverResponseMessageTextFlow, submitButton);
                             continue;
                         }
                         case ResponseCode.END_GAME -> {
@@ -218,10 +220,10 @@ public class Client {
                             displayMessage.append("Wait 10 seconds for the next game.\n");
 
                             ClientAppController.setScoreboard(gamePlayerData, scoreboardTableView);
-                            ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageLabel);
-                            ClientAppController.disableTextFields(guessCharTextField, guessKeywordTextField);
+                            ClientAppController.setServerResponseMessage(displayMessage.toString(), serverResponseMessageTextFlow);
+                            ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);
                             TimeUnit.SECONDS.sleep(10); // wait 10 seconds before starting new game
-                            ClientAppController.setServerResponseMessage("", serverResponseMessageLabel);
+                            ClientAppController.setServerResponseMessage("", serverResponseMessageTextFlow);
                         }
                         case ResponseCode.RESULTS -> {
                             StringBuilder playerInfoCharSeq = new StringBuilder(resp[0]);
@@ -251,12 +253,15 @@ public class Client {
                         case ResponseCode.OUT_GAME -> {
                             System.out.println(ResponseCode.OUT_GAME + " received. " + "Closing sockets and application now.");
                             exit();
-//                            Platform.exit();
-                            ClientAppController.closeWindow(rootPane);
+                            ClientAppController.closeWindow();
                             return;
                         }
+                        case ResponseCode.LOST_TURN -> ClientAppController.setServerResponseMessage(
+                                "You have lost your turn.\nWait for another players to finish.",
+                                serverResponseMessageTextFlow
+                        );
                     }
-                    ClientAppController.disableTextFields(guessCharTextField, guessKeywordTextField);
+                    ClientAppController.disableAnswerFunction(guessCharTextField, guessKeywordTextField, submitButton);
                 } catch (Exception e) {
                     System.out.println("Client error at listenForGameResponse: " + e.getMessage());
                     e.printStackTrace();

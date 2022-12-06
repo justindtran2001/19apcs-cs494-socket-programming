@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 // A handler for a player/client
 class Player implements Runnable {
@@ -65,7 +66,7 @@ class Player implements Runnable {
 
     }
 
-    private void registerHandler() throws IOException {
+    private void registerHandler() {
         String message;
 
         while (this.socket.isConnected()) {
@@ -106,12 +107,26 @@ class Player implements Runnable {
         System.out.println("restartGameHandler() called");
         game.restart();
 
-        for (Player p : pendingPlayers) {
-            Long register_id = game.register(p.username);
-            p.id = register_id;
-            players.put(register_id, p);
-            pendingPlayers.remove(p);
+        try {
+            for (Player p : pendingPlayers) {
+                Long register_id = game.register(p.username);
+                p.id = register_id;
+                players.put(register_id, p);
+
+                try {
+                    p.writer.write("Game started by Admin" + "," + Response.START_GAME);
+                    p.writer.newLine();
+                    p.writer.flush();
+                } catch (Exception e) {
+                    System.out.println("Handler exception at broadcast: " + e.getMessage());
+                }
+            }
+            pendingPlayers.clear();
+        } catch (Exception e) {
+            System.out.println("Error at adding pending players in game: " + e.getMessage());
+            throw new RuntimeException(e);
         }
+
 
         broadcastAll(game.getCurrentKeyWordState() + "-" + game.getCurrentQuestion().getHint(),
                 Response.CURRENT_KEYWORD);
@@ -153,12 +168,13 @@ class Player implements Runnable {
     }
 
     public void broadcastAll(String message, String code) {
+        System.out.println("broadcastAll() called: " + message + ", " + code);
         players.forEach((id, player) -> {
             try {
                 player.writer.write(message + "," + code);
                 player.writer.newLine();
                 player.writer.flush();
-                if (code == Response.OUT_GAME) {
+                if (Objects.equals(code, Response.OUT_GAME)) {
                     game.state = GameState.INITIAL;
                     players.remove(id);
                     game.playerList.Remove(id, player.username);

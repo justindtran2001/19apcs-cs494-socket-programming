@@ -4,19 +4,27 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientRegisterController">
-   <Text layoutX="210.0" layoutY="98.0" strokeType="OUTSIDE" strokeWidth="0.0" text="The Magical Wheel" textAlignment="CENTER" wrappingWidth="180.0">
+<?import javafx.scene.text.*?>
+<AnchorPane prefHeight="400.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientRegisterController">
+   <Text layoutX="260.0" layoutY="87.0" strokeType="OUTSIDE" strokeWidth="0.0" text="The Magical Wheel" textAlignment="CENTER" wrappingWidth="180.0">
       <font>
          <Font name="System Bold" size="48.0" />
       </font>
    </Text>
-   <VBox alignment="CENTER" layoutX="220.0" layoutY="268.0" spacing="10.0">
+   <VBox alignment="CENTER" layoutX="218.0" layoutY="252.0" prefHeight="101.0" prefWidth="264.0" spacing="10.0">
       <children>
-         <TextField fx:id="usernameTextField" prefHeight="26.0" prefWidth="160.0" promptText="Enter your name here" />
-         <Button fx:id="registerButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="160.0" text="Register" />
-         <Text fx:id="serverRespText" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" />
+         <TextField fx:id="usernameTextField" prefHeight="26.0" prefWidth="160.0" promptText="Enter your name here">
+            <font>
+               <Font size="16.0" />
+            </font></TextField>
+         <Button fx:id="registerButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="30.0" prefWidth="160.0" text="Register">
+            <font>
+               <Font size="16.0" />
+            </font></Button>
+         <Text fx:id="serverRespText" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER">
+            <font>
+               <Font size="16.0" />
+            </font></Text>
       </children>
    </VBox>
 </AnchorPane>

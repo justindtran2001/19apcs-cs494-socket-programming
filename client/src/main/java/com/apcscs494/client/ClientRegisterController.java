@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -34,6 +35,7 @@ public class ClientRegisterController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error creating Client.");
+            Platform.exit();
         }
 
         // Set event handlers from UI elements
@@ -86,7 +88,8 @@ public class ClientRegisterController implements Initializable {
     public static void rejectRegistration(String s, TextField usernameTextField, Text responseText) {
         Platform.runLater(() -> {
             responseText.setText(s);
-            usernameTextField.clear();
+            responseText.setFill(Color.RED);
+//            usernameTextField.clear();
         });
     }
 }

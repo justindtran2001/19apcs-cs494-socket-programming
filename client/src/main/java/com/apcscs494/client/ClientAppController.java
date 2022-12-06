@@ -1,22 +1,26 @@
 package com.apcscs494.client;
 
+import com.apcscs494.client.constants.ClientAppWindowState;
+import com.apcscs494.client.constants.TimerType;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientAppController implements Initializable {
     @FXML
@@ -32,7 +36,7 @@ public class ClientAppController implements Initializable {
     @FXML
     Button submitButton;
     @FXML
-    Label serverResponseMessageLabel;
+    TextFlow serverResponseMessageTextFlow;
     @FXML
     VBox scoreboardVBox;
     @FXML
@@ -44,14 +48,14 @@ public class ClientAppController implements Initializable {
     @FXML
     TableColumn<GamePlayerScore, Integer> scoreCol;
     @FXML
-    Label timeRemainingLabel;
+    Text usernameText;
 
     static Thread timerThread;
     static Integer remainingTime;
     static int timeAllowed = 15;
     static State currentState = State.WAITING;
 
-    private static final ReentrantLock mutex = new ReentrantLock();
+    static ClientAppWindowState clientAppWindowState = ClientAppWindowState.OPENED;
 
     static Client client;
 
@@ -65,6 +69,7 @@ public class ClientAppController implements Initializable {
             System.out.println("Error creating Client.");
         }
 
+        usernameText.setText(client.username);
 
         rankCol.setCellValueFactory(new PropertyValueFactory<>("rank"));
         usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -86,57 +91,23 @@ public class ClientAppController implements Initializable {
         submitButton.setOnAction(event -> sendAnswerToServer());
 
         client.listenForGameResponse(
-                rootPane,
                 keywordLabel,
                 hintLabel,
                 guessCharTextField,
                 guessKeywordTextField,
-                serverResponseMessageLabel,
+                submitButton,
+                serverResponseMessageTextFlow,
                 scoreboardTableView
         );
 
-//        this.setListenerForTimer();
-
-        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> client.exit()));
+        Platform.runLater(() -> rootPane.getScene().getWindow().setOnCloseRequest(windowEvent -> {
+            clientAppWindowState = ClientAppWindowState.CLOSED;
+            client.exit();
+        }));
     }
 
-    public static void closeWindow(AnchorPane rootPane) {
+    public static void closeWindow() {
         Platform.exit();
-    }
-
-    public void setListenerForTimer() {
-        timerThread = new Thread(() -> {
-            try {
-                while (true) {
-                    if (currentState == State.MY_TURN) {
-                        try {
-                            mutex.lock();
-                            if (remainingTime > 0) {
-                                remainingTime--;
-                                TimeUnit.SECONDS.sleep(1);
-                                System.out.println("Time remaining: " + remainingTime);
-
-                                Platform.runLater(() -> timeRemainingLabel.setText("Time remaining: " + remainingTime + " seconds"));
-                            } else {
-                                sendEmptyAnswer();
-                                currentState = State.WAITING;
-//                                disableTextFields(guessCharTextField, guessKeywordTextField);
-                                Platform.runLater(() -> timeRemainingLabel.setText(""));
-                            }
-                            mutex.unlock();
-                        } catch (Exception e) {
-                            System.out.println("Error at countdown timer: " + e.getMessage());
-                            throw e;
-                        }
-                    } else {
-                        Platform.runLater(() -> timeRemainingLabel.setText(""));
-                    }
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        timerThread.start();
     }
 
     public void sendAnswerToServer() {
@@ -164,7 +135,7 @@ public class ClientAppController implements Initializable {
 
             guessCharTextField.clear();
             guessKeywordTextField.clear();
-            serverResponseMessageLabel.setText("");
+            serverResponseMessageTextFlow.getChildren().clear();
         } catch (Exception e) {
             System.out.println("Client error at sendAnswerToServer: " + e.getMessage());
             e.printStackTrace();
@@ -179,45 +150,16 @@ public class ClientAppController implements Initializable {
         Platform.runLater(() -> hintLabel.setText("Hint: " + hint));
     }
 
-    public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField, Label serverResponseMessageLabel) {
+    public static void setYourTurn(TextField guessCharTextField, TextField guessKeywordTextField, TextFlow serverResponseMessageTextFlow, Button submitButton) {
         try {
             currentState = State.MY_TURN;
-            remainingTime = timeAllowed;
 
-            timerThread = new Thread(() -> {
-                try {
-                    while (true) {
-                        Thread.sleep(1000);
-                        remainingTime--;
-                        System.out.println("Remaining time: " + remainingTime);
-                        Platform.runLater(() -> {
-                            serverResponseMessageLabel.setText("You have " + remainingTime + " seconds to submit one answer.");
-                            if (remainingTime <= 3)
-                                serverResponseMessageLabel.setTextFill(Color.color(1.0, 0.0, 0.0));
-                            else
-                                serverResponseMessageLabel.setTextFill(Color.color(0, 0, 0));
-                        });
-
-                        if (remainingTime <= 0) {
-                            client.sendToServer("(na),(na)");
-                            Platform.runLater(() -> {
-                                serverResponseMessageLabel.setTextFill(Color.color(0, 0, 0));
-                                serverResponseMessageLabel.setText("");
-                            });
-                            break;
-                        }
-                    }
-                } catch (InterruptedException | IOException e) {
-                    System.out.println("Error at countdown");
-                    throw new RuntimeException(e);
-                }
-            });
-            timerThread.start();
+            startTimer(timeAllowed, TimerType.YOUR_TURN, serverResponseMessageTextFlow);
 
             Platform.runLater(() -> {
                 guessCharTextField.setDisable(false);
                 guessKeywordTextField.setDisable(false);
-                serverResponseMessageLabel.setText("You have " + timeAllowed + " seconds to submit one answer.");
+                submitButton.setDisable(false);
             });
         } catch (Exception e) {
             System.out.println("Error at set remainingTime for myTurn: " + e.getMessage());
@@ -225,20 +167,79 @@ public class ClientAppController implements Initializable {
         }
     }
 
-    public static void disableTextFields(TextField guessCharTextField, TextField guessKeywordTextField) {
+    public static void disableAnswerFunction(TextField guessCharTextField, TextField guessKeywordTextField, Button submitButton) {
         if (currentState == State.WAITING) return;
 
-        System.out.println("disableTextFields() called");
+        System.out.println("disableAnswerFunction() called");
         currentState = State.WAITING;
         remainingTime = -1;
         Platform.runLater(() -> {
             guessCharTextField.setDisable(true);
             guessKeywordTextField.setDisable(true);
+            submitButton.setDisable(true);
         });
     }
 
-    public static void setServerResponseMessage(String scoreboard, Label serverResponseMessageLabel) {
-        Platform.runLater(() -> serverResponseMessageLabel.setText(scoreboard));
+    public static void setServerResponseMessage(String message, TextFlow serverResponseMessageTextFlow) {
+        Platform.runLater(() -> {
+            if (message.contains("Wait 10 seconds")) {
+                Text winnerText = new Text(message.split("\n")[0]);
+                Text waitText = new Text(message.split("\n")[1]);
+                serverResponseMessageTextFlow.getChildren().clear();
+                Separator separator = new Separator(Orientation.HORIZONTAL);
+                separator.prefWidthProperty().set(serverResponseMessageTextFlow.getWidth());
+                serverResponseMessageTextFlow.getChildren().addAll(winnerText, waitText);
+                startTimer(10, TimerType.WAIT_FOR_NEW_GAME, serverResponseMessageTextFlow);
+            } else {
+                Text text = new Text(message);
+                text.setFont(Font.font(16.0));
+                serverResponseMessageTextFlow.getChildren().clear();
+                serverResponseMessageTextFlow.getChildren().add(text);
+            }
+        });
+    }
+
+    private static void startTimer(int seconds, TimerType type, TextFlow serverResponseMessageTextFlow) {
+        remainingTime = seconds;
+        timerThread = new Thread(() -> {
+            try {
+                while (true) {
+                    Thread.sleep(1000);
+                    remainingTime--;
+                    System.out.println("Remaining time: " + remainingTime);
+                    Platform.runLater(() -> {
+                        serverResponseMessageTextFlow.getChildren().clear();
+                        Text text = new Text();
+                        text.setFont(Font.font(16.0));
+
+                        if (type == TimerType.YOUR_TURN) {
+                            text.setText("You have " + remainingTime + " seconds to submit one answer.");
+                        } else if (type == TimerType.WAIT_FOR_NEW_GAME) {
+                            text.setText("A new game will be started in " + remainingTime + " seconds.");
+                        }
+
+                        if (remainingTime <= 3)
+                            text.setFill(Color.color(1.0, 0.0, 0.0));
+                        else
+                            text.setFill(Color.color(0, 0, 0));
+                        serverResponseMessageTextFlow.getChildren().add(text);
+                    });
+
+
+
+                    if (remainingTime <= 0) {
+                        client.sendToServer("(na),(na)");
+                        Platform.runLater(() -> serverResponseMessageTextFlow.getChildren().clear());
+                        break;
+                    }
+                    if (clientAppWindowState == ClientAppWindowState.CLOSED) break;
+                }
+            } catch (InterruptedException | IOException e) {
+                System.out.println("Error at countdown");
+                throw new RuntimeException(e);
+            }
+        });
+        timerThread.start();
     }
 
     public static void setScoreboard(ArrayList<GamePlayerScore> gamePlayerData, TableView<GamePlayerScore> scoreboardTableView) {
@@ -249,18 +250,6 @@ public class ClientAppController implements Initializable {
                 System.out.println("Error at updating scoreboard: " + e.getMessage());
                 throw e;
             }
-        });
-    }
-
-    private void sendEmptyAnswer() {
-        try {
-            client.sendToServer("(na),(na)");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        Platform.runLater(() -> {
-            guessCharTextField.clear();
-            guessKeywordTextField.clear();
         });
     }
 }

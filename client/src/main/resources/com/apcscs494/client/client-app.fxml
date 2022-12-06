@@ -2,24 +2,30 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<AnchorPane fx:id="rootPane" prefHeight="400.0" prefWidth="698.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientAppController">
-   <Button fx:id="submitButton" alignment="CENTER" layoutX="288.0" layoutY="267.0" mnemonicParsing="false" prefHeight="62.0" prefWidth="65.0" text="Submit" textAlignment="CENTER" />
-   <TextField fx:id="guessCharTextField" layoutX="73.0" layoutY="267.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess a character" />
-   <TextField fx:id="guessKeywordTextField" layoutX="73.0" layoutY="301.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess the keyword" />
+<?import javafx.scene.text.*?>
+<AnchorPane fx:id="rootPane" prefHeight="400.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.apcscs494.client.ClientAppController">
+   <Button fx:id="submitButton" alignment="CENTER" disable="true" layoutX="288.0" layoutY="267.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="65.0" text="SUBMIT" textAlignment="CENTER" />
+   <TextField fx:id="guessCharTextField" layoutX="73.0" layoutY="267.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess a character">
+      <font>
+         <Font size="16.0" />
+      </font></TextField>
+   <TextField fx:id="guessKeywordTextField" layoutX="73.0" layoutY="312.0" prefHeight="25.0" prefWidth="205.0" promptText="Guess the keyword">
+      <font>
+         <Font size="16.0" />
+      </font></TextField>
    <VBox layoutX="73.0" layoutY="65.0" prefHeight="185.0" prefWidth="280.0" spacing="5.0">
       <children>
-         <Label fx:id="keywordLabel" text="Keyword: ">
+         <Label fx:id="keywordLabel" prefHeight="30.0" prefWidth="283.0" text="Keyword: ">
             <font>
-               <Font name="System Bold" size="18.0" />
+               <Font name="System Bold" size="20.0" />
             </font></Label>
-         <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0">
+         <ScrollPane fitToWidth="true" prefHeight="200.0" prefWidth="200.0">
            <content>
                <VBox>
                   <children>
                      <Label fx:id="hintLabel" maxHeight="1.7976931348623157E308" maxWidth="278.0" prefWidth="278.0" text="Hint: " wrapText="true">
                         <font>
-                           <Font size="14.0" />
+                           <Font size="16.0" />
                         </font></Label>
                   </children>
                </VBox>
@@ -27,24 +33,41 @@
          </ScrollPane>
       </children>
    </VBox>
-   <AnchorPane layoutX="366.0" layoutY="268.0" prefHeight="62.0" prefWidth="181.0">
+   <AnchorPane layoutX="366.0" layoutY="268.0" prefHeight="62.0" prefWidth="278.0">
       <children>
-         <Label fx:id="serverResponseMessageLabel" />
+         <TextFlow fx:id="serverResponseMessageTextFlow" prefHeight="80.0" prefWidth="278.0" />
       </children>
    </AnchorPane>
-   <ScrollPane layoutX="366.0" layoutY="65.0">
+   <ScrollPane layoutX="366.0" layoutY="65.0" prefHeight="187.0" prefWidth="294.0">
       <content>
-         <VBox fx:id="scoreboardVBox" prefHeight="185.0" prefWidth="276.0">
+         <VBox fx:id="scoreboardVBox" prefHeight="185.0" prefWidth="292.0">
             <children>
-               <TableView fx:id="scoreboardTableView" prefHeight="200.0" prefWidth="267.0">
+               <TableView fx:id="scoreboardTableView" prefHeight="185.0" prefWidth="296.0">
                   <columns>
-                     <TableColumn fx:id="rankCol" prefWidth="49.0" text="Rank" />
-                     <TableColumn fx:id="usernameCol" prefWidth="167.0" text="Username" />
-                     <TableColumn fx:id="scoreCol" prefWidth="55.0" text="Score" />
+                     <TableColumn fx:id="rankCol" editable="false" prefWidth="56.0" resizable="false" text="Rank" />
+                     <TableColumn fx:id="usernameCol" editable="false" prefWidth="160.0" resizable="false" text="Username" />
+                     <TableColumn fx:id="scoreCol" editable="false" prefWidth="75.0" resizable="false" text="Score" />
                   </columns></TableView>
             </children>
          </VBox>
       </content>
    </ScrollPane>
-   <Label fx:id="timeRemainingLabel" layoutX="73.0" layoutY="345.0" prefHeight="17.0" prefWidth="280.0" />
+   <TextFlow fx:id="usernameTextFlow" layoutX="73.0" layoutY="35.0" prefHeight="30.0" prefWidth="280.0">
+      <children>
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username: ">
+            <font>
+               <Font size="16.0" />
+            </font>
+         </Text>
+         <Text fx:id="usernameText" fill="#018bf5" layoutX="10.0" layoutY="10.0" strokeType="OUTSIDE" strokeWidth="0.0" text="(username)">
+            <font>
+               <Font name="System Bold" size="16.0" />
+            </font>
+         </Text>
+      </children></TextFlow>
+   <Label layoutX="366.0" layoutY="35.0" prefHeight="21.0" prefWidth="87.0" text="Scoreboard">
+      <font>
+         <Font name="System Bold" size="16.0" />
+      </font>
+   </Label>
 </AnchorPane>
